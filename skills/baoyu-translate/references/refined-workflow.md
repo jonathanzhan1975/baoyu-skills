@@ -162,25 +162,31 @@ The main agent critically reviews the draft against the source. Save review find
 - **Over-nominalization**: Abstract nouns where verbs or adjectives would be more natural (e.g., "进行了讨论" → "讨论了")
 - **Awkward pronouns**: Overuse of 他/她/它/我们/你 where they can be omitted
 
-### 4.3 Strategy Execution
+### 4.3 Figurative Language & Emotional Fidelity
+- Cross-check against the metaphor mapping in `01-analysis.md`: were all flagged metaphors/idioms handled per the recommended approach (interpret/substitute/retain)?
+- Flag any metaphors or figurative expressions that were translated literally and sound unnatural or lose the intended meaning in the target language
+- Check emotional connotations: do words that carry subjective feelings in the source (e.g., "alarming", "haunting", "striking") evoke the same response in the translation, or were they flattened into neutral/objective descriptions?
+- Flag implied meanings that were lost: sentences where the author's deeper intent was not conveyed because the translator stayed too close to the surface meaning
+
+### 4.4 Strategy Execution
 - Were the translation strategies from `02-prompt.md` actually followed?
 - Did the translator apply the tone and register identified in analysis?
 - Were comprehension challenges from `01-analysis.md` addressed with appropriate notes?
 - Were glossary terms used consistently?
 
-### 4.4 Expression & Logic
+### 4.5 Expression & Logic
 - Flag sentences that read like "translationese" — unnatural word order, calques, stiff phrasing
 - Check logical flow between sentences and paragraphs
 - Identify where sentence restructuring would improve readability
-- Note where the target language idiom was missed (e.g., English metaphor translated literally instead of finding a target-language equivalent)
+- Note where the target language idiom was missed
 
-### 4.5 Translator's Notes Quality
+### 4.6 Translator's Notes Quality
 - Are notes accurate, concise, and genuinely helpful?
 - Identify missed comprehension challenges that need notes
 - Flag over-annotations on terms obvious to the target audience
 - Check that cultural references are explained where needed
 
-### 4.6 Cultural Adaptation
+### 4.7 Cultural Adaptation
 - Do metaphors and idioms work in the target language?
 - Are any references potentially confusing or offensive in the target culture?
 - Could any passage be misinterpreted due to cultural context differences?
@@ -193,6 +199,11 @@ The main agent critically reviews the draft against the source. Save review find
 
 ## Europeanized Language Issues
 - [issue type]: [example from draft] → [suggested fix]
+- ...
+
+## Figurative Language & Emotional Fidelity
+- [literal metaphor]: [original] → [draft rendering] → [suggested interpretation]
+- [flattened emotion]: [original word/phrase] → [draft rendering] → [how to restore emotional effect]
 - ...
 
 ## Strategy Execution
@@ -223,6 +234,8 @@ The revision reads `03-draft.md` (the original draft) and `04-critique.md` (the 
 
 - Fix all accuracy issues identified in the critique
 - Rewrite Europeanized expressions into natural target-language patterns
+- Re-interpret literally translated metaphors and figurative expressions per the metaphor mapping; replace with natural target-language renderings that convey the intended meaning and emotional effect
+- Restore flattened emotional connotations: ensure words carrying subjective feelings evoke the same response as the source
 - Apply missed translation strategies
 - Restructure stiff or awkward sentences for fluency
 - Add, remove, or revise translator's notes per critique recommendations
@@ -239,6 +252,7 @@ Final pass on `05-revision.md` for publication quality:
 - Smooth any remaining rough transitions between paragraphs
 - Ensure the narrative voice is consistent throughout
 - For storytelling-style content: ensure the narrative flow draws readers in
+- Final scan for surviving literal metaphors or flattened emotions: any figurative expression that still reads as "translated" rather than "written" should be recast into natural target-language expression
 - Final consistency check on terminology across the full text
 - Verify formatting is preserved correctly (headings, bold, links, code blocks)
 - Remove any remaining traces of translationese

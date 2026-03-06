@@ -213,7 +213,7 @@ Before translating chunks:
 
 #### Quick Mode
 
-Translate directly → save to `translation.md`.
+Translate directly → save to `translation.md`. No analysis file, but still apply all translation principles above — especially: interpret figurative language by meaning (not word-for-word), preserve emotional connotations, and restructure sentences for natural target-language flow.
 
 #### Normal Mode
 
