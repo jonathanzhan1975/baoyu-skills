@@ -21,7 +21,7 @@ bash scripts/sync-clawhub.sh           # sync all skills
 bash scripts/sync-clawhub.sh <skill>   # sync one skill
 ```
 
-Release-time artifact preparation is configured via `.releaserc.yml`. Keep registry/project-specific packaging in hook scripts.
+Release hooks are configured via `.releaserc.yml`. This repo does not stage a separate release directory: release prep only syncs `packages/` into each skill's committed `scripts/vendor/`, and publish reads the skill directory directly.
 
 ## Shared Workspace Packages
 

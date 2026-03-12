@@ -16,7 +16,8 @@ const SKIPPED_FILES = new Set([".DS_Store"]);
 export async function syncSharedSkillPackages(repoRoot, options = {}) {
   const root = path.resolve(repoRoot);
   const workspacePackages = await discoverWorkspacePackages(root);
-  const consumers = await discoverSkillScriptPackages(root);
+  const targetConsumerDirs = normalizeTargetConsumerDirs(root, options.targets ?? []);
+  const consumers = await discoverSkillScriptPackages(root, targetConsumerDirs);
   const runtime = options.install === false ? null : resolveBunRuntime();
   const managedPaths = new Set();
   const packageDirs = [];
@@ -40,6 +41,25 @@ export async function syncSharedSkillPackages(repoRoot, options = {}) {
     packageDirs,
     managedPaths: [...managedPaths].sort(),
   };
+}
+
+function normalizeTargetConsumerDirs(repoRoot, targets) {
+  if (!targets || targets.length === 0) return null;
+
+  const consumerDirs = new Set();
+  for (const target of targets) {
+    if (!target) continue;
+
+    const resolvedTarget = path.resolve(repoRoot, target);
+    if (path.basename(resolvedTarget) === "scripts") {
+      consumerDirs.add(resolvedTarget);
+      continue;
+    }
+
+    consumerDirs.add(path.join(resolvedTarget, "scripts"));
+  }
+
+  return consumerDirs;
 }
 
 export function ensureManagedPathsClean(repoRoot, managedPaths) {
@@ -182,13 +202,14 @@ async function discoverWorkspacePackages(repoRoot) {
   return map;
 }
 
-async function discoverSkillScriptPackages(repoRoot) {
+async function discoverSkillScriptPackages(repoRoot, targetConsumerDirs = null) {
   const skillsRoot = path.join(repoRoot, "skills");
   const consumers = [];
   const skillEntries = await fs.readdir(skillsRoot, { withFileTypes: true });
   for (const entry of skillEntries) {
     if (!entry.isDirectory()) continue;
     const scriptsDir = path.join(skillsRoot, entry.name, "scripts");
+    if (targetConsumerDirs && !targetConsumerDirs.has(path.resolve(scriptsDir))) continue;
     const packageJsonPath = path.join(scriptsDir, "package.json");
     if (!existsSync(packageJsonPath)) continue;
     consumers.push({ dir: scriptsDir, packageJsonPath });

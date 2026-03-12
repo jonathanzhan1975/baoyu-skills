@@ -57,8 +57,8 @@ Supported hooks:
 
 | Hook | Purpose | Expected Responsibility |
 |------|---------|-------------------------|
-| `prepare_artifact` | Build a releasable artifact for one target | Validate the target is self-contained, stage files, apply any project-specific packaging |
-| `publish_artifact` | Publish one prepared artifact | Upload artifact, attach version/changelog/tags |
+| `prepare_artifact` | Make one target releasable | Validate the target is self-contained, sync/embed local dependencies, optionally stage extra files |
+| `publish_artifact` | Publish one releasable target | Upload the prepared target (or a staged directory if the project uses one), attach version/changelog/tags |
 
 Supported placeholders:
 
@@ -66,14 +66,14 @@ Supported placeholders:
 |-------------|---------|
 | `{project_root}` | Absolute path to repository root |
 | `{target}` | Absolute path to the module/skill being released |
-| `{artifact_dir}` | Absolute path to a temporary artifact directory for this target |
+| `{artifact_dir}` | Absolute path to a temporary staging directory for this target, when the project uses one |
 | `{version}` | Version selected by the release workflow |
 | `{dry_run}` | `true` or `false` |
 | `{release_notes_file}` | Absolute path to a UTF-8 file containing release notes/changelog text |
 
 Execution rules:
 - Keep the skill generic: do not hardcode registry/package-manager/project layout details into this SKILL.
-- If `prepare_artifact` exists, run it once per target before publish-related checks that need the final artifact.
+- If `prepare_artifact` exists, run it once per target before publish-related checks that need the final releasable target state.
 - Write release notes to a temp file and pass that file path to `publish_artifact`; do not inline multiline changelog text into shell commands.
 - If hooks are absent, fall back to the default project-agnostic release workflow.
 

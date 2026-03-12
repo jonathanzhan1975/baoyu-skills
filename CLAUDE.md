@@ -14,7 +14,7 @@ Skills organized into three categories in `.claude-plugin/marketplace.json` (def
 
 Each skill contains `SKILL.md` (YAML front matter + docs), optional `scripts/`, `references/`, `prompts/`.
 
-Top-level `scripts/` contains repo maintenance utilities (sync, hooks, artifact build/publish).
+Top-level `scripts/` contains repo maintenance utilities (sync, hooks, publish).
 
 ## Running Skills
 

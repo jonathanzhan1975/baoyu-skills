@@ -1,47 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const TEXT_EXTENSIONS = new Set([
-  "md",
-  "mdx",
-  "txt",
-  "json",
-  "json5",
-  "yaml",
-  "yml",
-  "toml",
-  "js",
-  "cjs",
-  "mjs",
-  "ts",
-  "tsx",
-  "jsx",
-  "py",
-  "sh",
-  "rb",
-  "go",
-  "rs",
-  "swift",
-  "kt",
-  "java",
-  "cs",
-  "cpp",
-  "c",
-  "h",
-  "hpp",
-  "sql",
-  "csv",
-  "ini",
-  "cfg",
-  "env",
-  "xml",
-  "html",
-  "css",
-  "scss",
-  "sass",
-  "svg",
-]);
-
 const PACKAGE_DEPENDENCY_SECTIONS = [
   "dependencies",
   "optionalDependencies",
@@ -49,15 +8,18 @@ const PACKAGE_DEPENDENCY_SECTIONS = [
   "devDependencies",
 ];
 
-export async function listTextFiles(root) {
+const SKIPPED_DIRS = new Set([".git", ".clawhub", ".clawdhub", "node_modules"]);
+const SKIPPED_FILES = new Set([".DS_Store"]);
+
+export async function listReleaseFiles(root) {
+  const resolvedRoot = path.resolve(root);
   const files = [];
 
   async function walk(folder) {
     const entries = await fs.readdir(folder, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.name.startsWith(".")) continue;
-      if (entry.name === "node_modules") continue;
-      if (entry.name === ".clawhub" || entry.name === ".clawdhub") continue;
+      if (entry.isDirectory() && SKIPPED_DIRS.has(entry.name)) continue;
+      if (entry.isFile() && SKIPPED_FILES.has(entry.name)) continue;
 
       const fullPath = path.join(folder, entry.name);
       if (entry.isDirectory()) {
@@ -66,36 +28,19 @@ export async function listTextFiles(root) {
       }
       if (!entry.isFile()) continue;
 
-      const relPath = path.relative(root, fullPath).split(path.sep).join("/");
-      const ext = relPath.split(".").pop()?.toLowerCase() ?? "";
-      if (!TEXT_EXTENSIONS.has(ext)) continue;
-
+      const relPath = path.relative(resolvedRoot, fullPath).split(path.sep).join("/");
       const bytes = await fs.readFile(fullPath);
       files.push({ relPath, bytes });
     }
   }
 
-  await walk(root);
+  await walk(resolvedRoot);
   files.sort((left, right) => left.relPath.localeCompare(right.relPath));
   return files;
 }
 
-export async function collectReleaseFiles(root) {
-  await validateSelfContainedRelease(root);
-  return listTextFiles(root);
-}
-
-export async function materializeReleaseFiles(files, outDir) {
-  await fs.mkdir(outDir, { recursive: true });
-  for (const file of files) {
-    const outputPath = path.join(outDir, fromPosixRel(file.relPath));
-    await fs.mkdir(path.dirname(outputPath), { recursive: true });
-    await fs.writeFile(outputPath, file.bytes);
-  }
-}
-
 export async function validateSelfContainedRelease(root) {
-  const files = await listTextFiles(root);
+  const files = await listReleaseFiles(root);
   for (const file of files.filter((entry) => path.posix.basename(entry.relPath) === "package.json")) {
     const packageDir = path.resolve(root, fromPosixRel(path.posix.dirname(file.relPath)));
     const packageJson = JSON.parse(file.bytes.toString("utf8"));
@@ -108,7 +53,7 @@ export async function validateSelfContainedRelease(root) {
         const targetDir = path.resolve(packageDir, spec.slice(5));
         if (!isWithinRoot(root, targetDir)) {
           throw new Error(
-            `Release artifact is not self-contained: ${file.relPath} depends on ${name} via ${spec}`,
+            `Release target is not self-contained: ${file.relPath} depends on ${name} via ${spec}`,
           );
         }
         await fs.access(targetDir).catch(() => {

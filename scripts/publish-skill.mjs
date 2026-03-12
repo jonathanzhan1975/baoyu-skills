@@ -5,31 +5,31 @@ import { existsSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { listTextFiles } from "./lib/skill-artifact.mjs";
+import { listReleaseFiles, validateSelfContainedRelease } from "./lib/release-files.mjs";
 
 const DEFAULT_REGISTRY = "https://clawhub.ai";
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  if (!options.skillDir || !options.artifactDir || !options.version) {
-    throw new Error("--skill-dir, --artifact-dir, and --version are required");
+  if (!options.skillDir || !options.version) {
+    throw new Error("--skill-dir and --version are required");
   }
 
   const skillDir = path.resolve(options.skillDir);
-  const artifactDir = path.resolve(options.artifactDir);
   const skill = buildSkillEntry(skillDir, options.slug, options.displayName);
   const changelog = options.changelogFile
     ? await fs.readFile(path.resolve(options.changelogFile), "utf8")
     : "";
 
-  const files = await listTextFiles(artifactDir);
+  await validateSelfContainedRelease(skillDir);
+  const files = await listReleaseFiles(skillDir);
   if (files.length === 0) {
-    throw new Error(`Artifact directory is empty: ${artifactDir}`);
+    throw new Error(`Skill directory is empty: ${skillDir}`);
   }
 
   if (options.dryRun) {
     console.log(`Dry run: would publish ${skill.slug}@${options.version}`);
-    console.log(`Artifact: ${artifactDir}`);
+    console.log(`Skill: ${skillDir}`);
     console.log(`Files: ${files.length}`);
     return;
   }
@@ -68,7 +68,6 @@ async function main() {
 function parseArgs(argv) {
   const options = {
     skillDir: "",
-    artifactDir: "",
     version: "",
     changelogFile: "",
     registry: "",
@@ -82,11 +81,6 @@ function parseArgs(argv) {
     const arg = argv[index];
     if (arg === "--skill-dir") {
       options.skillDir = argv[index + 1] ?? "";
-      index += 1;
-      continue;
-    }
-    if (arg === "--artifact-dir") {
-      options.artifactDir = argv[index + 1] ?? "";
       index += 1;
       continue;
     }
@@ -141,11 +135,10 @@ function parseArgs(argv) {
 }
 
 function printUsage() {
-  console.log(`Usage: publish-skill-artifact.mjs --skill-dir <dir> --artifact-dir <dir> --version <semver> [options]
+  console.log(`Usage: publish-skill.mjs --skill-dir <dir> --version <semver> [options]
 
 Options:
-  --skill-dir <dir>        Source skill directory (used for slug/display name)
-  --artifact-dir <dir>     Prepared artifact directory
+  --skill-dir <dir>        Skill directory to publish
   --version <semver>       Version to publish
   --changelog-file <file>  Release notes file
   --registry <url>         Override registry base URL
@@ -227,7 +220,7 @@ async function publishSkill({ registry, token, skill, files, version, changelog,
   );
 
   for (const file of files) {
-    form.append("files", new Blob([file.bytes], { type: "text/plain" }), file.relPath);
+    form.append("files", new Blob([file.bytes], { type: "application/octet-stream" }), file.relPath);
   }
 
   const response = await fetch(`${registry}/api/v1/skills`, {

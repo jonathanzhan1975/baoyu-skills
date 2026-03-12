@@ -10,7 +10,9 @@ import {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = path.resolve(options.repoRoot);
-  const result = await syncSharedSkillPackages(repoRoot);
+  const result = await syncSharedSkillPackages(repoRoot, {
+    targets: options.targets,
+  });
 
   if (options.enforceClean) {
     ensureManagedPathsClean(repoRoot, result.managedPaths);
@@ -23,6 +25,7 @@ function parseArgs(argv) {
   const options = {
     repoRoot: process.cwd(),
     enforceClean: false,
+    targets: [],
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -34,6 +37,11 @@ function parseArgs(argv) {
     }
     if (arg === "--enforce-clean") {
       options.enforceClean = true;
+      continue;
+    }
+    if (arg === "--target") {
+      options.targets.push(argv[index + 1] ?? "");
+      index += 1;
       continue;
     }
     if (arg === "-h" || arg === "--help") {
@@ -51,6 +59,7 @@ function printUsage() {
 
 Options:
   --repo-root <dir>   Repository root (default: current directory)
+  --target <dir>      Sync only one skill directory (can be repeated)
   --enforce-clean     Fail if managed files change after sync
   -h, --help          Show help`);
 }
