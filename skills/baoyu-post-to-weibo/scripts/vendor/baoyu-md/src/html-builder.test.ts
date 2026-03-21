@@ -59,6 +59,17 @@ test("normalizeCssText and normalizeInlineCss replace variables and strip declar
   assert.doesNotMatch(normalizedHtml, /var\(--md-primary-color\)/);
 });
 
+test("normalizeInlineCss removes quoted custom property values without leaving fragments behind", () => {
+  const normalizedHtml = normalizeInlineCss(
+    `<html style="--md-font-family: Menlo, Monaco, 'Courier New', monospace; color: var(--md-primary-color)"></html>`,
+    DEFAULT_STYLE,
+  );
+
+  assert.match(normalizedHtml, /style=" color: #0F4C81"/);
+  assert.doesNotMatch(normalizedHtml, /Courier New/);
+  assert.doesNotMatch(normalizedHtml, /--md-font-family/);
+});
+
 test("HTML structure helpers hoist nested lists and remove the first heading", () => {
   const nestedList = `<ul><li>Parent<ul><li>Child</li></ul></li></ul>`;
   assert.equal(

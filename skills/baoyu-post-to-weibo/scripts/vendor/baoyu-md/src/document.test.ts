@@ -9,11 +9,25 @@ import { COLOR_PRESETS, FONT_FAMILY_MAP } from "./constants.ts";
 import {
   buildMarkdownDocumentMeta,
   formatTimestamp,
+  renderMarkdownDocument,
   resolveColorToken,
   resolveFontFamilyToken,
   resolveMarkdownStyle,
   resolveRenderOptions,
 } from "./document.ts";
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, `\\$&`);
+}
+
+function findInlineStyle(html: string, tagName: string, text: string): string {
+  const pattern = new RegExp(
+    `<${tagName}[^>]*style="([^"]*)"[^>]*>${escapeRegExp(text)}</${tagName}>`,
+  );
+  const match = html.match(pattern);
+  assert.ok(match, `Expected inline style for <${tagName}>${text}</${tagName}>`);
+  return match![1]!;
+}
 
 function useCwd(t: TestContext, cwd: string): void {
   const previous = process.cwd();
@@ -137,4 +151,24 @@ keep_title: true
   assert.equal(explicit.theme, "simple");
   assert.equal(explicit.fontSize, "18px");
   assert.equal(explicit.keepTitle, false);
+});
+
+test("renderMarkdownDocument layers default rules into grace theme before CSS inlining", async () => {
+  const { html } = await renderMarkdownDocument(
+    `## Section\n\nParagraph with **bold** text.`,
+    { keepTitle: true, theme: "grace" },
+  );
+
+  const h2Style = findInlineStyle(html, "h2", "Section");
+  assert.match(h2Style, /background: #92617E/);
+  assert.match(h2Style, /box-shadow: 0 4px 6px rgba\(0, 0, 0, 0\.1\)/);
+
+  const pMatch = html.match(/<p[^>]*style="([^"]*)"[^>]*>/);
+  assert.ok(pMatch, "Expected inline style on <p> tag");
+  assert.match(pMatch![1]!, /color:/);
+
+  const strongPattern = /<strong[^>]*style="([^"]*)"[^>]*>bold<\/strong>/;
+  const strongMatch = html.match(strongPattern);
+  assert.ok(strongMatch, "Expected inline style for <strong>bold</strong>");
+  assert.match(strongMatch![1]!, /font-weight:/);
 });
