@@ -6,13 +6,16 @@ Post markdown articles to WeChat Official Account with full formatting support.
 
 ```bash
 # Post markdown article
-npx -y bun ./scripts/wechat-article.ts --markdown article.md
+${BUN_X} ./scripts/wechat-article.ts --markdown article.md
 
 # With theme
-npx -y bun ./scripts/wechat-article.ts --markdown article.md --theme grace
+${BUN_X} ./scripts/wechat-article.ts --markdown article.md --theme grace
+
+# Disable bottom citations for ordinary external links
+${BUN_X} ./scripts/wechat-article.ts --markdown article.md --no-cite
 
 # With explicit options
-npx -y bun ./scripts/wechat-article.ts --markdown article.md --author "作者名" --summary "摘要"
+${BUN_X} ./scripts/wechat-article.ts --markdown article.md --author "作者名" --summary "摘要"
 ```
 
 ## Parameters
@@ -20,9 +23,10 @@ npx -y bun ./scripts/wechat-article.ts --markdown article.md --author "作者名
 | Parameter | Description |
 |-----------|-------------|
 | `--markdown <path>` | Markdown file to convert and post |
-| `--theme <name>` | Theme: default, grace, or simple |
+| `--theme <name>` | Theme: default, grace, simple, modern |
+| `--no-cite` | Keep ordinary external links inline instead of converting them to bottom citations |
 | `--title <text>` | Override title (auto-extracted from markdown) |
-| `--author <name>` | Author name (default: 宝玉) |
+| `--author <name>` | Author name |
 | `--summary <text>` | Article summary |
 | `--html <path>` | Pre-rendered HTML file (alternative to markdown) |
 | `--profile <dir>` | Chrome profile directory |
@@ -50,6 +54,8 @@ Regular paragraph with **bold** and *italic*.
 
 [Link text](https://example.com)
 ```
+
+Markdown mode converts ordinary external links into bottom citations by default for WeChat-friendly output. Use `--no-cite` to disable that behavior.
 
 ## Image Handling
 

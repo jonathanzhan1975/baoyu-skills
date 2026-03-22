@@ -2,6 +2,502 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.76.1 - 2026-03-21
+
+### 文档
+- `baoyu-youtube-transcript`：修复 zsh glob 问题 — 运行脚本时始终对 YouTube URL 使用单引号
+
+## 1.76.0 - 2026-03-21
+
+### 新功能
+- `baoyu-youtube-transcript`：Markdown 输出中新增标题、描述摘要和封面图片
+
+### 修复
+- `baoyu-markdown-to-html`：测试运行器改用 process.execPath 和 tsx import
+
+## 1.75.0 - 2026-03-21
+
+### 新功能
+- `baoyu-youtube-transcript`：新技能 — 下载 YouTube 视频字幕/转录文本和封面图片，支持多语言、章节分段和说话人识别
+
+## 1.74.1 - 2026-03-21
+
+### 修复
+- `baoyu-image-gen`：对齐 OpenRouter 图像生成与当前 API，增强图像支持，收窄 Gemini 宽高比范围 (by @cwandev)
+- `baoyu-image-gen`：扩展 OpenRouter 模型检测和宽高比验证
+
+## 1.74.0 - 2026-03-20
+
+### 新功能
+- `baoyu-markdown-to-html`：CLI 支持全部渲染选项 — color、font-family、font-size、code-theme、mac-code-block、line-number、count、legend
+
+### 修复
+- `baoyu-markdown-to-html`：修复 CSS 自定义属性正则无法处理带引号值的问题；grace/simple 主题现在会叠加 default 主题 CSS
+
+## 1.73.3 - 2026-03-20
+
+### 修复
+- `baoyu-post-to-wechat`：修复占位符替换时短占位符错误匹配更长编号变体的问题
+
+## 1.73.2 - 2026-03-20
+
+### 修复
+- `baoyu-post-to-wechat`：修复正文图片上传，正确使用 media/uploadimg 接口并处理格式和大小限制 (by @AICreator-Wind)
+
+### 重构
+- `baoyu-post-to-wechat`：提取图片处理模块，本地转换不支持的格式（WebP/BMP/GIF → JPEG/PNG）而非回退到 material 接口
+
+## 1.73.1 - 2026-03-18
+
+### 重构
+- `baoyu-danger-x-to-markdown`：测试从 bun:test 迁移至 node:test
+
+## 1.73.0 - 2026-03-18
+
+### 新功能
+- `baoyu-danger-x-to-markdown`：支持 X 文章中的视频媒体，渲染封面图和视频链接
+
+## 1.72.0 - 2026-03-18
+
+### 新功能
+- `baoyu-danger-x-to-markdown`：支持渲染 X 文章中嵌入的 MARKDOWN 实体（代码块等）
+
+## 1.71.0 - 2026-03-17
+
+### 新功能
+- `baoyu-image-gen`：为 Seedream 5.0/4.5/4.0 模型添加参考图支持，并增加模型特定的尺寸校验
+
+## 1.70.0 - 2026-03-17
+
+### 新功能
+- `baoyu-format-markdown`：优化标题生成，基于公式智能推荐并提供平实风格备选
+- `baoyu-format-markdown`：自动生成双版本摘要（`summary` + `description`），写入 frontmatter
+
+## 1.69.1 - 2026-03-16
+
+### 修复
+- `baoyu-chrome-cdp`：收紧 Chrome 自动连接逻辑，减少误连接
+
+## 1.69.0 - 2026-03-16
+
+### 新功能
+- `baoyu-chrome-cdp`：支持连接到已有的 Chrome 会话 (by @bviews)
+
+### 修复
+- `baoyu-chrome-cdp`：支持 Chrome 146 原生远程调试（审批模式）(by @bviews)
+- `baoyu-chrome-cdp`：保留 findExistingChromeDebugPort 中的 HTTP 验证 (by @bviews)
+- `baoyu-danger-gemini-web`：复用 openPageSession 并修复孤立标签页泄漏 (by @bviews)
+- `baoyu-danger-gemini-web`：显式配置优先于自动发现 (by @bviews)
+- `baoyu-danger-gemini-web`：自动发现跳过时也遵循 BAOYU_CHROME_PROFILE_DIR (by @bviews)
+- `baoyu-post-to-wechat`：提升浏览器发布可靠性 (by @cfh-7598)
+
+### 文档
+- `baoyu-cover-image`：完善人物参考图片工作流和交互式确认说明
+
+## 1.68.0 - 2026-03-14
+
+### 新功能
+- `baoyu-article-illustrator`：新增可配置输出目录（`default_output_dir`），支持 4 种选项——`imgs-subdir`、`same-dir`、`illustrations-subdir`、`independent`
+- `baoyu-cover-image`：新增参考图片人物保留功能——当参考图包含人物时使用 `usage: direct` 传递给模型，风格化保留人物特征
+
+## 1.67.0 - 2026-03-13
+
+### 新功能
+- `baoyu-image-gen`：新增 DashScope qwen-image-2.0-pro 模型支持，支持自由尺寸和文字渲染 (by @JianJang2017)
+
+## 1.66.1 - 2026-03-13
+
+### 测试
+- 将测试文件从集中式 `tests/` 目录迁移至与源码同级
+- 将测试从 `.mjs` 转换为 TypeScript（`.test.ts`），使用 `tsx` 运行器
+- 新增 npm workspaces 配置，CI 工作流添加 npm 缓存
+
+## 1.66.0 - 2026-03-13
+
+### 新功能
+- `baoyu-image-gen`：新增即梦（Jimeng）和豆包（Seedream）图像生成服务商 (by @lindaifeng)
+
+### 修复
+- `baoyu-image-gen`：收紧即梦服务商行为
+
+### 重构
+- `baoyu-image-gen`：导出函数以支持测试，新增模块入口守卫
+
+### 文档
+- `baoyu-image-gen`：在 SKILL.md 和 README 中添加即梦和豆包服务商文档
+
+### 测试
+- 新增测试基础设施，包含 CI 工作流和 image-gen 单元测试
+
+## 1.65.1 - 2026-03-13
+
+### 重构
+- `baoyu-translate`：将 chunk 解析从 remark/unified 替换为 markdown-it，新增 main.ts CLI 入口
+
+## 1.65.0 - 2026-03-13
+
+### 新功能
+- `baoyu-post-to-wechat`：新增占位符图片上传支持，自动去重 Markdown 内嵌图片
+
+### 修复
+- `baoyu-post-to-wechat`：修复 frontmatter 解析，允许前导空白和可选的尾随换行
+
+### 重构
+- `baoyu-post-to-wechat`：将 `renderMarkdownToHtml` 重构为 `renderMarkdownWithPlaceholders`，输出结构化结果
+
+## 1.64.0 - 2026-03-13
+
+### 新功能
+- `baoyu-image-gen`：新增 OpenRouter 服务商，支持图像生成、参考图和可配置模型
+
+## 1.63.0 - 2026-03-13
+
+### 新功能
+- `baoyu-url-to-markdown`：本地浏览器抓取失败时自动回退到 `defuddle.md` 托管 API
+- `baoyu-url-to-markdown`：将 YouTube 字幕/文字记录提取到 Markdown 输出中
+- `baoyu-url-to-markdown`：转换前展开 Shadow DOM 内容，提升 Web Component 页面的转换质量
+- `baoyu-url-to-markdown`：Markdown front matter 中包含语言标识（如有）
+
+### 重构
+- `baoyu-url-to-markdown`：将单体转换器拆分为 defuddle、legacy 和 shared 三个模块
+
+### 文档
+- 修复 README 中 Claude Code marketplace 仓库名大小写
+
+## 1.62.0 - 2026-03-12
+
+### 新功能
+- `baoyu-infographic`：支持灵活宽高比，可使用自定义 W:H 值（如 3:4、4:3、2.35:1），同时保留预设名称
+
+### 修复
+- 设置插件严格模式，防止重复注册斜杠命令
+
+### 文档
+- `baoyu-post-to-wechat`：替换类似凭证的占位符
+
+## 1.61.0 - 2026-03-11
+
+### 新功能
+- `baoyu-post-to-wechat`：新增多账号支持，通过 `--account` 参数选择账号，EXTEND.md 支持 accounts 配置块，每个账号独立 Chrome 配置目录和凭证解析链
+
+### 修复
+- 排除 `out/dist/build` 目录和 `bun.lockb` 文件，避免打包到技能发布文件中
+- 修复技能发布时 MIME 类型不正确导致 ClawhHub 拒绝的问题
+
+## 1.60.0 - 2026-03-11
+
+### 新功能
+- `baoyu-url-to-markdown`：支持复用已有 Chrome CDP 实例，修复端口检测顺序问题
+
+### 修复
+- `baoyu-post-to-x`：补充 x-article 缺失的 `fs` 导入
+
+### 重构
+- 统一所有 CDP 技能使用共享 `baoyu-chrome-cdp` 包，各技能内置 vendor 副本
+- 精简 CLAUDE.md，将详细文档移至 `docs/` 目录
+- 从 synced vendor 直接发布技能，移除单独的 artifact 准备步骤
+
+## 1.59.1 - 2026-03-11
+
+### 修复
+- `baoyu-translate`：改进短文本注释密度规则，补充风格预设到 02-prompt.md 的显式传递
+- `baoyu-post-to-x`：移除 `--disable-blink-features=AutomationControlled` Chrome 启动参数
+
+### 重构
+- `baoyu-post-to-weibo`：为 md-to-html.ts 添加入口守卫，支持模块导入
+- 使用本地 sync-clawhub.mjs 脚本替代 clawhub CLI
+
+### 文档
+- 更新 CLAUDE.md 以反映 v1.59.0 代码库状态 (by @jackL1020)
+
+## 1.59.0 - 2026-03-09
+
+### 新功能
+- `baoyu-image-gen`：新增批量并行图片生成和提供商级别限流 (by @SeamoonAO)
+
+### 修复
+- `baoyu-image-gen`：修复多个 API key 可用时恢复 Google 为默认提供商
+
+### 文档
+- 改进技能文档清晰度 (by @SeamoonAO)
+
+## 1.58.0 - 2026-03-08
+
+### 新功能
+- 新增 EXTEND.md 的 XDG 配置路径支持 (by @liby)
+
+### 修复
+- `baoyu-post-to-wechat`：暴露 agent-browser 启动错误信息
+- `baoyu-post-to-wechat`：加固 agent-browser 命令和 eval 处理 (by @luojiyin1987)
+- `baoyu-image-gen`：使用 execFileSync 替代 shell 执行 Google curl 请求 (by @luojiyin1987)
+- `baoyu-format-markdown`：使用 spawnSync 替代 shell 执行 autocorrect 命令 (by @luojiyin1987)
+
+### 文档
+- 修正 CLAUDE 依赖说明 (by @luojiyin1987)
+- 将 markdown-to-html 添加到 README 工具技能列表 (by @luojiyin1987)
+
+## 1.57.0 - 2026-03-08
+
+### 新功能
+- 新增 ClawHub/OpenClaw 发布支持，包含同步脚本和 README 文档
+
+### 重构
+- 为所有 skill 前言添加 openclaw 元数据，兼容 ClawHub 注册表
+- 全部 skill 中将 `SKILL_DIR` 统一重命名为 `baseDir`
+- `baoyu-danger-gemini-web`、`baoyu-danger-x-to-markdown`：使用动态脚本路径显示用法
+- `baoyu-comic`、`baoyu-xhs-images`：通过 skill 接口调用图片生成，不再直接调用脚本
+
+## 1.56.1 - 2026-03-08
+
+### 修复
+- `baoyu-post-to-weibo`：简化头条文章图片插入逻辑，使用 Backspace 按键替代复杂的 deleteContents 方案，兼容 ProseMirror 编辑器
+
+## 1.56.0 - 2026-03-08
+
+### 新功能
+- `baoyu-article-illustrator`：预设优先选择流程，按内容类型分类的风格预设
+- `baoyu-xhs-images`：精简工作流从 6 步到 4 步，新增智能确认（快速/自定义/详细三种路径）
+
+### 修复
+- `baoyu-post-to-wechat`：通过文件选择器拦截改进图片上传可靠性
+
+## 1.55.0 - 2026-03-08
+
+### 新功能
+- `baoyu-article-illustrator`：新增 screen-print 风格和 `--preset` 快捷预设（如 tech-explainer、opinion-piece）
+- `baoyu-cover-image`：新增 screen-print 渲染风格和 duotone 调色板，包含 5 个新预设（poster-art、mondo 等）
+- `baoyu-xhs-images`：新增 screen-print 风格和 `--preset` 快捷预设，内置 23 个场景预设
+
+### 文档
+- 为中英文 README 新增致谢章节，致敬相关开源项目
+
+## 1.54.1 - 2026-03-07
+
+### 修复
+- `baoyu-post-to-x`：保持已填充的发帖窗口处于打开状态，方便用户手动检查并发布
+
+### 文档
+- `baoyu-post-to-x`：补充默认帖子类型选择规则和手动发布流程说明
+- `README`：为中英文 README 新增 Star History 图表
+
+## 1.54.0 - 2026-03-06
+
+### 新功能
+- `baoyu-format-markdown`：优化标题和摘要生成，支持多风格候选（颠覆型、方案型、悬念型、数字型），新增禁用模式和钩子优先原则
+- `baoyu-markdown-to-html`：新增 `--cite` 选项，将普通外链转换为底部编号引用
+- `baoyu-post-to-wechat`：Markdown 输入默认启用底部引用，新增 `--no-cite` 标志可关闭
+- `baoyu-translate`：EXTEND.md 支持 `glossary_files` 加载外部术语表文件（Markdown 表格或 YAML 格式）
+- `baoyu-translate`：新增 frontmatter 转换规则，翻译时将源文章元数据字段添加 `source` 前缀
+
+## 1.53.0 - 2026-03-06
+
+### 新功能
+- `baoyu-url-to-markdown`：将渲染后的 HTML 快照保存为 `-captured.html`，与 Markdown 文件并列输出
+- `baoyu-url-to-markdown`：优先使用 Defuddle 转换，失败时自动回退到旧版 Readability/选择器提取器
+
+## 1.52.0 - 2026-03-06
+
+### 新功能
+- `baoyu-post-to-weibo`：新增 `--video` 视频上传支持（图片+视频最多 18 个文件）
+- `baoyu-post-to-weibo`：上传方式从剪贴板粘贴改为 `DOM.setFileInputFiles`，提升上传可靠性
+
+### 修复
+- `baoyu-post-to-weibo`：新增 Chrome 健康检查，无响应时自动重启
+- `baoyu-post-to-weibo`：发布前检查页面是否在微博首页，避免在错误页面操作
+
+## 1.51.2 - 2026-03-06
+
+### 修复
+- `release-skills`：将显式语言文件名模式（如 `CHANGELOG.de.md`）替换为通用模式，避免 Gen Agent Trust Hub URL 扫描器误报
+- `baoyu-infographic`：新增凭证/密钥剥离指令，解决 Snyk W007 不安全凭证处理审计问题
+
+## 1.51.1 - 2026-03-06
+
+### 重构
+- 统一 Chrome CDP profile 路径——所有 skill 共享 `baoyu-skills/chrome-profile`，不再各自独立目录
+- 修复 `baoyu-post-to-weibo` 错误复用 `x-browser-profile` 路径的问题
+
+### 修复
+- 移除所有安装说明中的 `curl | bash` 远程代码执行模式
+- `md-to-html` 脚本强制仅允许 HTTPS 下载远程图片
+- 添加重定向次数限制（最多 5 次），防止无限重定向
+- 在 CLAUDE.md 中新增安全准则章节
+
+## 1.51.0 - 2026-03-06
+
+### 新功能
+- `baoyu-post-to-weibo`：新增微博发布技能——支持带图文本发布和头条文章，通过 Chrome CDP 自动化操作
+- `baoyu-format-markdown`：新增标题/摘要多候选项选择——生成 3 个候选供用户选择，支持 EXTEND.md 中的 `auto_select` 配置
+
+## 1.50.0 - 2026-03-06
+
+### 新功能
+- `baoyu-translate`：翻译风格预设从 4 种扩展到 9 种——新增学术、商务、幽默、口语化和优雅风格
+- `baoyu-translate`：新增 `--style` 命令行参数，支持按次指定翻译风格
+- `baoyu-translate`：将风格指令集成到子代理提示词模板
+
+## 1.49.0 - 2026-03-06
+
+### 新功能
+- `baoyu-format-markdown`：新增读者视角内容分析阶段——在应用格式之前先分析要点、结构和格式问题
+- `baoyu-format-markdown`：重构工作流从 8 步精简为 7 步，新增明确的格式化原则和完成报告模板
+- `baoyu-translate`：将步骤 2 的工作流机制提取到独立参考文件，精简 SKILL.md
+- `baoyu-translate`：扩展触发关键词（改成中文、快翻、本地化等），提升技能激活准确度
+- `baoyu-translate`：快速翻译模式下对长内容主动提示切换建议
+- `baoyu-translate`：分块时将 frontmatter 保存到 `chunks/frontmatter.md`
+
+## 1.48.2 - 2026-03-06
+
+### 新功能
+- `baoyu-translate`：在精翻工作流的审查和修订阶段新增比喻语言与情感忠实度检查
+- `baoyu-translate`：增强快速翻译模式，强制执行比喻语言的意义优先翻译原则
+
+## 1.48.1 - 2026-03-05
+
+### 新功能
+- `baoyu-translate`：在分析阶段新增比喻语言与隐喻映射——翻译前先解读隐喻、习语和隐含意义，避免字面直译
+- `baoyu-translate`：新增"意义优先于字面"、"比喻语言解读"、"情感忠实度"三项翻译原则，同步更新 SKILL.md、精翻工作流和子代理提示词模板
+
+## 1.48.0 - 2026-03-05
+
+### 新功能
+- `baoyu-translate`：为 chunk.ts 新增 `--output-dir` 选项——分块文件现在写入翻译输出目录而非源文件目录
+- `baoyu-translate`：优化精翻工作流——将审校拆分为批判性审查 + 修订（5→6 步），新增中日韩目标语言的欧化表达诊断
+
+## 1.47.0 - 2026-03-05
+
+### 新功能
+- 新增 `baoyu-translate` 翻译技能——支持快速/标准/精翻三种模式，自定义术语表、面向受众翻译、长文档自动分块并行翻译
+- 为所有技能的 EXTEND.md 偏好检测添加 PowerShell 跨平台支持
+
+## 1.46.0 - 2026-03-05
+
+### 新功能
+- 为 url-to-markdown 新增 `--output-dir` 选项，支持自定义输出目录并自动生成文件名
+
+## 1.45.1 - 2026-03-05
+
+### 重构
+- 将所有技能中硬编码的 `npx -y bun` 替换为 `${BUN_X}` 运行时变量——优先使用原生 `bun`，回退到 `npx -y bun`
+- 在 CLAUDE.md 中新增运行时检测章节，在所有 SKILL.md 的脚本目录说明中添加运行时解析步骤
+
+## 1.45.0 - 2026-03-05
+
+### 新功能
+- `baoyu-post-to-x`：X 文章发布后自动验证——检查残留占位符和图片数量是否正确
+- `baoyu-post-to-x`：增加 CDP 超时至 60 秒，图片插入间隔增加 3 秒 DOM 稳定等待，改善长文章发布稳定性
+
+## 1.44.0 - 2026-03-05
+
+### 新功能
+- `baoyu-url-to-markdown`：新增 `--download-media` 参数，支持下载图片和视频到本地目录，并将 Markdown 中的链接改写为本地路径
+- `baoyu-url-to-markdown`：从页面 meta 信息（og:image）提取封面图，写入 YAML front matter 的 `coverImage` 字段
+- `baoyu-url-to-markdown`：支持 `data-src` 懒加载图片提取（兼容微信公众号等站点）
+- `baoyu-url-to-markdown`：新增 EXTEND.md 偏好设置，支持首次使用引导配置媒体下载行为
+
+## 1.43.2 - 2026-03-05
+
+### 重构
+- `baoyu-url-to-markdown`：使用 defuddle 库替换自定义 HTML 提取逻辑（linkedom + Readability + Turndown），简化内容提取和 Markdown 转换
+
+## 1.43.1 - 2026-03-02
+
+### 新功能
+- `baoyu-post-to-x`：自动检测 WSL 环境，将 Chrome profile 路径解析为 Windows 本地路径，解决登录态丢失问题
+- `baoyu-post-to-wechat`：自动检测 WSL 环境，将 Chrome profile 路径解析为 Windows 本地路径，解决登录态丢失问题
+- `baoyu-danger-gemini-web`：WSL 自动检测 Chrome profile 路径；新增 `GEMINI_WEB_DEBUG_PORT` 环境变量支持固定调试端口
+- `baoyu-danger-x-to-markdown`：WSL 自动检测 Chrome profile 路径；新增 `X_DEBUG_PORT` 环境变量支持固定调试端口
+
+## 1.43.0 - 2026-03-02
+
+### 新功能
+- `baoyu-post-to-wechat`：支持通过环境变量覆盖浏览器调试端口（`WECHAT_BROWSER_DEBUG_PORT`）和配置目录（`WECHAT_BROWSER_PROFILE_DIR`）
+- `baoyu-post-to-x`：支持通过环境变量覆盖浏览器调试端口（`X_BROWSER_DEBUG_PORT`）和配置目录（`X_BROWSER_PROFILE_DIR`）
+
+## 1.42.3 - 2026-03-02
+
+### 修复
+- `baoyu-image-gen`：DashScope 宽高比映射改用标准预设尺寸匹配，避免自由计算产生无效分辨率
+
+## 1.42.2 - 2026-03-01
+
+### 新功能
+- `baoyu-markdown-to-html`：内联渲染管线（移除子进程），修复 CJK 强调符号处理顺序，增强 modern 主题（GFM 警告块、排版改进）
+- `baoyu-post-to-wechat`：内置 Markdown 转换模块化渲染器，新增颜色支持，简化发布流程
+
+## 1.42.1 - 2026-02-28
+
+### 新功能
+- `baoyu-markdown-to-html`：将 render.ts 拆分为 cli、constants、extend-config、html-builder、renderer、themes、types 模块；本地打包代码高亮主题
+
+## 1.42.0 - 2026-02-28
+
+### 新功能
+- `baoyu-markdown-to-html`：合并 heritage 和 warm 为 modern 主题，新增主题默认颜色（default→蓝、grace→紫、simple→绿、modern→橙）
+- `baoyu-post-to-wechat`：EXTEND.md 新增默认颜色配置，首次设置增加 modern 主题和颜色选择
+
+## 1.41.0 - 2026-02-28
+
+### 新功能
+- `baoyu-markdown-to-html`：重命名主题（red→heritage、orange→warm），新增 13 个颜色预设、serif-cjk 字体、主题级样式默认值
+
+## 1.40.1 - 2026-02-28
+
+### 新功能
+- `baoyu-image-gen`：明确模型解析优先级（EXTEND.md 优先于环境变量），生成图片时显示当前模型及切换方式
+
+## 1.40.0 - 2026-02-28
+
+### 新功能
+- `baoyu-image-gen`：支持 OpenAI Chat Completions 端点生成图片 (by @zhao-newname)
+- `baoyu-markdown-to-html`：新增 CLI 自定义选项（--color、--font-family、--font-size、--code-theme、--mac-code-block、--line-number、--cite、--count、--legend）及 EXTEND.md 配置支持
+
+## 1.39.0 - 2026-02-28
+
+### 新功能
+- `baoyu-markdown-to-html`：新增红色主题（红金配色、宋体排版、传统书法风格）和橙色主题（暖色调现代风、圆角装饰、宽松行距）
+
+## 1.38.0 - 2026-02-28
+
+### 新功能
+- `baoyu-danger-x-to-markdown`：支持文章内嵌推文渲染，以引用块形式显示作者信息和推文摘要
+- `baoyu-danger-x-to-markdown`：`--download-media` 复用已转换的 Markdown 文件，跳过重复抓取
+- `baoyu-danger-x-to-markdown`：推特图片下载升级至 4096x4096 高分辨率
+
+### 修复
+- `baoyu-danger-x-to-markdown`：改进实体解析逻辑，通过逻辑键查找提升媒体和链接映射准确性
+- `baoyu-danger-x-to-markdown`：所有区块类型（标题、列表、引用块）支持尾随媒体展示
+
+## 1.37.1 - 2026-02-27
+
+### 修复
+- `baoyu-danger-gemini-web`：同步上游模型请求头并更新模型列表 (by @xkcoding)
+
+## 1.37.0 - 2026-02-27
+
+### 新功能
+- `baoyu-danger-x-to-markdown`：支持 X 文章内联链接渲染，将 LINK/MEDIA 实体映射为 Markdown 链接
+- `baoyu-danger-x-to-markdown`：输出目录使用基于内容的 slug，生成更有意义的文件夹名称
+- `baoyu-danger-x-to-markdown`：新增 atomic 媒体队列，支持无直接媒体引用的区块
+
+## 1.36.0 - 2026-02-27
+
+### 新功能
+- `baoyu-image-gen`：新增 `gemini-3.1-flash-image-preview` Google 多模态图片生成模型支持
+- `baoyu-image-gen`：优化首次使用引导流程，支持阻塞式偏好配置
+
+### 修复
+- `baoyu-image-gen`：检测到 HTTP 代理时自动回退使用 curl 调用 Google API (by @liye71023326)
+
+## 1.35.0 - 2026-02-24
+
+### 新功能
+- `baoyu-image-gen`：新增 Replicate 图片生成服务，支持自定义模型配置 (by @justnode)
+- `baoyu-infographic`：新增 `dense-modules` 高密度模块布局及 3 种新风格（`morandi-journal`、`pop-laboratory`、`retro-pop-grid`），支持关键词快捷选择。高密度信息大图提示词来自 [AJ](https://waytoagi.feishu.cn/wiki/YG0zwalijihRREkgmPzcWRInnUg)
+
+### 文档
+- `baoyu-image-gen`：补充 Replicate 模型配置说明文档
+
 ## 1.34.2 - 2026-02-25
 
 ### 文档

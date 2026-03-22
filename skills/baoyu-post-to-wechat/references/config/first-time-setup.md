@@ -49,14 +49,34 @@ header: "Theme"
 question: "Default theme for article conversion?"
 options:
   - label: "default (Recommended)"
-    description: "Classic layout - centered title with border, white-on-color H2"
+    description: "Classic layout - centered title with border, white-on-color H2 (default: blue)"
   - label: "grace"
-    description: "Elegant - text shadows, rounded cards, refined blockquotes"
+    description: "Elegant - text shadows, rounded cards, refined blockquotes (default: purple)"
   - label: "simple"
-    description: "Minimal modern - asymmetric rounded corners, clean whitespace"
+    description: "Minimal modern - asymmetric rounded corners, clean whitespace (default: green)"
+  - label: "modern"
+    description: "Large rounded corners, pill headings, spacious (default: orange)"
 ```
 
-### Question 2: Default Publishing Method
+### Question 2: Default Color
+
+```yaml
+header: "Color"
+question: "Default color preset? (theme default if not set)"
+options:
+  - label: "Theme default (Recommended)"
+    description: "Use the theme's built-in default color"
+  - label: "blue"
+    description: "#0F4C81 经典蓝"
+  - label: "red"
+    description: "#A93226 中国红"
+  - label: "green"
+    description: "#009874 翡翠绿"
+```
+
+Note: User can choose "Other" to type any preset name (vermilion, yellow, purple, sky, rose, olive, black, gray, pink, orange) or hex value.
+
+### Question 3: Default Publishing Method
 
 ```yaml
 header: "Method"
@@ -68,7 +88,7 @@ options:
     description: "Slow, requires Chrome and login session"
 ```
 
-### Question 3: Default Author
+### Question 4: Default Author
 
 ```yaml
 header: "Author"
@@ -80,7 +100,7 @@ options:
 
 Note: User will likely choose "Other" to type their author name.
 
-### Question 4: Open Comments
+### Question 5: Open Comments
 
 ```yaml
 header: "Comments"
@@ -92,7 +112,7 @@ options:
     description: "Disable comments by default"
 ```
 
-### Question 5: Fans-Only Comments
+### Question 6: Fans-Only Comments
 
 ```yaml
 header: "Fans only"
@@ -104,7 +124,7 @@ options:
     description: "Only followers can comment"
 ```
 
-### Question 6: Save Location
+### Question 7: Save Location
 
 ```yaml
 header: "Save"
@@ -132,14 +152,51 @@ options:
 
 ## EXTEND.md Template
 
+### Single Account (Default)
+
 ```md
-default_theme: [default/grace/simple]
+default_theme: [default/grace/simple/modern]
+default_color: [preset name, hex, or empty for theme default]
 default_publish_method: [api/browser]
 default_author: [author name or empty]
 need_open_comment: [1/0]
 only_fans_can_comment: [1/0]
 chrome_profile_path:
 ```
+
+### Multi-Account
+
+```md
+default_theme: [default/grace/simple/modern]
+default_color: [preset name, hex, or empty for theme default]
+
+accounts:
+  - name: [display name]
+    alias: [short key, e.g. "baoyu"]
+    default: true
+    default_publish_method: [api/browser]
+    default_author: [author name]
+    need_open_comment: [1/0]
+    only_fans_can_comment: [1/0]
+    app_id: [WeChat App ID, optional]
+    app_secret: [WeChat App Secret, optional]
+  - name: [second account name]
+    alias: [short key, e.g. "ai-tools"]
+    default_publish_method: [api/browser]
+    default_author: [author name]
+    need_open_comment: [1/0]
+    only_fans_can_comment: [1/0]
+```
+
+## Adding More Accounts Later
+
+After initial setup, users can add accounts by editing EXTEND.md:
+
+1. Add an `accounts:` block with list items
+2. Move per-account settings (author, publish method, comments) into each account entry
+3. Keep global settings (theme, color) at the top level
+4. Each account needs a unique `alias` (used for CLI `--account` arg and Chrome profile naming)
+5. Set `default: true` on the primary account
 
 ## Modifying Preferences Later
 

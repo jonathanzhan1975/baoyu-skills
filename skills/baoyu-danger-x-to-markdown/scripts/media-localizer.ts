@@ -187,22 +187,31 @@ function buildFileName(kind: MediaKind, index: number, sourceUrl: string, extens
 
 const FRONTMATTER_COVER_RE = /^(coverImage:\s*")(https?:\/\/[^"]+)(")/m;
 
+function toHighResUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.hostname !== "pbs.twimg.com") return rawUrl;
+    const ext = path.posix.extname(parsed.pathname).replace(/^\./, "").toLowerCase();
+    if (!ext || !IMAGE_EXTENSIONS.has(ext)) return rawUrl;
+    parsed.pathname = parsed.pathname.replace(new RegExp(`\\.${ext}$`), "");
+    parsed.searchParams.set("format", ext === "jpeg" ? "jpg" : ext);
+    parsed.searchParams.set("name", "4096x4096");
+    return parsed.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
+function isPlausibleMediaUrl(rawUrl: string): boolean {
+  const ext = resolveExtensionFromUrl(rawUrl);
+  if (ext && (IMAGE_EXTENSIONS.has(ext) || VIDEO_EXTENSIONS.has(ext))) return true;
+  if (resolveKindFromHostname(rawUrl) !== undefined) return true;
+  return false;
+}
+
 function collectMarkdownLinkCandidates(markdown: string): MarkdownLinkCandidate[] {
-  MARKDOWN_LINK_RE.lastIndex = 0;
   const candidates: MarkdownLinkCandidate[] = [];
   const seen = new Set<string>();
-
-  let match: RegExpExecArray | null;
-  while ((match = MARKDOWN_LINK_RE.exec(markdown))) {
-    const label = match[1] ?? "";
-    const rawUrl = match[3] ?? "";
-    if (!rawUrl || seen.has(rawUrl)) continue;
-    seen.add(rawUrl);
-    candidates.push({
-      url: rawUrl,
-      hint: label.startsWith("![") ? "image" : "unknown",
-    });
-  }
 
   const fmMatch = markdown.match(/^---\n([\s\S]*?)\n---/);
   if (fmMatch) {
@@ -211,6 +220,21 @@ function collectMarkdownLinkCandidates(markdown: string): MarkdownLinkCandidate[
       seen.add(coverMatch[2]);
       candidates.push({ url: coverMatch[2], hint: "image" });
     }
+  }
+
+  MARKDOWN_LINK_RE.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = MARKDOWN_LINK_RE.exec(markdown))) {
+    const label = match[1] ?? "";
+    const rawUrl = match[3] ?? "";
+    if (!rawUrl || seen.has(rawUrl)) continue;
+    const isImage = label.startsWith("![");
+    if (!isImage && !isPlausibleMediaUrl(rawUrl)) continue;
+    seen.add(rawUrl);
+    candidates.push({
+      url: rawUrl,
+      hint: isImage ? "image" : "unknown",
+    });
   }
 
   return candidates;
@@ -259,7 +283,8 @@ export async function localizeMarkdownMedia(
 
   for (const candidate of candidates) {
     try {
-      const response = await fetch(candidate.url, {
+      const downloadUrl = toHighResUrl(candidate.url);
+      const response = await fetch(downloadUrl, {
         method: "GET",
         redirect: "follow",
         headers: {

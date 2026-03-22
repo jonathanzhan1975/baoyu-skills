@@ -152,6 +152,8 @@ slide-deck/
 infographic/
 illustrations/
 comic/
+translate/
+posts/
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -159,3 +161,9 @@ comic/
 *.ipr
 
 .claude/skills/baoyu-skill-evolution
+# ClawHub local state (current and legacy directory names from the official CLI)
+.clawhub/
+.clawdhub/
+.release-artifacts/
+.worktrees/
+youtube-transcript/

@@ -1,46 +1,145 @@
 import path from "node:path";
 import process from "node:process";
 import { homedir } from "node:os";
+import { fileURLToPath } from "node:url";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
-import type { CliArgs, Provider, ExtendConfig } from "./types";
+import type {
+  BatchFile,
+  BatchTaskInput,
+  CliArgs,
+  ExtendConfig,
+  Provider,
+} from "./types";
+
+type ProviderModule = {
+  getDefaultModel: () => string;
+  generateImage: (prompt: string, model: string, args: CliArgs) => Promise<Uint8Array>;
+  validateArgs?: (model: string, args: CliArgs) => void;
+  getDefaultOutputExtension?: (model: string, args: CliArgs) => string;
+};
+
+type PreparedTask = {
+  id: string;
+  prompt: string;
+  args: CliArgs;
+  provider: Provider;
+  model: string;
+  outputPath: string;
+  providerModule: ProviderModule;
+};
+
+type TaskResult = {
+  id: string;
+  provider: Provider;
+  model: string;
+  outputPath: string;
+  success: boolean;
+  attempts: number;
+  error: string | null;
+};
+
+type ProviderRateLimit = {
+  concurrency: number;
+  startIntervalMs: number;
+};
+
+type LoadedBatchTasks = {
+  tasks: BatchTaskInput[];
+  jobs: number | null;
+  batchDir: string;
+};
+
+const MAX_ATTEMPTS = 3;
+const DEFAULT_MAX_WORKERS = 10;
+const POLL_WAIT_MS = 250;
+const DEFAULT_PROVIDER_RATE_LIMITS: Record<Provider, ProviderRateLimit> = {
+  replicate: { concurrency: 5, startIntervalMs: 700 },
+  google: { concurrency: 3, startIntervalMs: 1100 },
+  openai: { concurrency: 3, startIntervalMs: 1100 },
+  openrouter: { concurrency: 3, startIntervalMs: 1100 },
+  dashscope: { concurrency: 3, startIntervalMs: 1100 },
+  jimeng: { concurrency: 3, startIntervalMs: 1100 },
+  seedream: { concurrency: 3, startIntervalMs: 1100 },
+};
 
 function printUsage(): void {
   console.log(`Usage:
   npx -y bun scripts/main.ts --prompt "A cat" --image cat.png
-  npx -y bun scripts/main.ts --prompt "A landscape" --image landscape.png --ar 16:9
   npx -y bun scripts/main.ts --promptfiles system.md content.md --image out.png
+  npx -y bun scripts/main.ts --batchfile batch.json
 
 Options:
   -p, --prompt <text>       Prompt text
   --promptfiles <files...>  Read prompt from files (concatenated)
-  --image <path>            Output image path (required)
-  --provider google|openai|dashscope  Force provider (auto-detect by default)
+  --image <path>            Output image path (required in single-image mode)
+  --batchfile <path>        JSON batch file for multi-image generation
+  --jobs <count>            Worker count for batch mode (default: auto, max from config, built-in default 10)
+  --provider google|openai|openrouter|dashscope|replicate|jimeng|seedream  Force provider (auto-detect by default)
   -m, --model <id>          Model ID
   --ar <ratio>              Aspect ratio (e.g., 16:9, 1:1, 4:3)
   --size <WxH>              Size (e.g., 1024x1024)
   --quality normal|2k       Quality preset (default: 2k)
-  --imageSize 1K|2K|4K      Image size for Google (default: from quality)
-  --ref <files...>          Reference images (Google multimodal or OpenAI edits)
-  --n <count>               Number of images (default: 1)
+  --imageSize 1K|2K|4K      Image size for Google/OpenRouter (default: from quality)
+  --ref <files...>          Reference images (Google, OpenAI, OpenRouter, Replicate, or Seedream 4.0/4.5/5.0)
+  --n <count>               Number of images for the current task (default: 1)
   --json                    JSON output
   -h, --help                Show help
 
+Batch file format:
+  {
+    "jobs": 4,
+    "tasks": [
+      {
+        "id": "hero",
+        "promptFiles": ["prompts/hero.md"],
+        "image": "out/hero.png",
+        "provider": "replicate",
+        "model": "google/nano-banana-pro",
+        "ar": "16:9"
+      }
+    ]
+  }
+
+Behavior:
+  - Batch mode automatically runs in parallel when pending tasks >= 2
+  - Each image retries automatically up to 3 attempts
+  - Batch summary reports success count, failure count, and per-image errors
+
 Environment variables:
   OPENAI_API_KEY            OpenAI API key
+  OPENROUTER_API_KEY        OpenRouter API key
   GOOGLE_API_KEY            Google API key
   GEMINI_API_KEY            Gemini API key (alias for GOOGLE_API_KEY)
-  DASHSCOPE_API_KEY         DashScope API key (阿里云通义万象)
+  DASHSCOPE_API_KEY         DashScope API key
+  REPLICATE_API_TOKEN       Replicate API token
+  JIMENG_ACCESS_KEY_ID      Jimeng Access Key ID
+  JIMENG_SECRET_ACCESS_KEY  Jimeng Secret Access Key
+  ARK_API_KEY               Seedream/Ark API key
   OPENAI_IMAGE_MODEL        Default OpenAI model (gpt-image-1.5)
+  OPENROUTER_IMAGE_MODEL    Default OpenRouter model (google/gemini-3.1-flash-image-preview)
   GOOGLE_IMAGE_MODEL        Default Google model (gemini-3-pro-image-preview)
-  DASHSCOPE_IMAGE_MODEL     Default DashScope model (z-image-turbo)
+  DASHSCOPE_IMAGE_MODEL     Default DashScope model (qwen-image-2.0-pro)
+  REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-pro)
+  JIMENG_IMAGE_MODEL        Default Jimeng model (jimeng_t2i_v40)
+  SEEDREAM_IMAGE_MODEL      Default Seedream model (doubao-seedream-5-0-260128)
   OPENAI_BASE_URL           Custom OpenAI endpoint
+  OPENAI_IMAGE_USE_CHAT     Use /chat/completions instead of /images/generations (true|false)
+  OPENROUTER_BASE_URL       Custom OpenRouter endpoint
+  OPENROUTER_HTTP_REFERER   Optional app URL for OpenRouter attribution
+  OPENROUTER_TITLE          Optional app name for OpenRouter attribution
   GOOGLE_BASE_URL           Custom Google endpoint
   DASHSCOPE_BASE_URL        Custom DashScope endpoint
+  REPLICATE_BASE_URL        Custom Replicate endpoint
+  JIMENG_BASE_URL           Custom Jimeng endpoint
+  SEEDREAM_BASE_URL         Custom Seedream endpoint
+  BAOYU_IMAGE_GEN_MAX_WORKERS  Override batch worker cap
+  BAOYU_IMAGE_GEN_<PROVIDER>_CONCURRENCY  Override provider concurrency
+  BAOYU_IMAGE_GEN_<PROVIDER>_START_INTERVAL_MS  Override provider start gap in ms
 
 Env file load order: CLI args > EXTEND.md > process.env > <cwd>/.baoyu-skills/.env > ~/.baoyu-skills/.env`);
 }
 
-function parseArgs(argv: string[]): CliArgs {
+export function parseArgs(argv: string[]): CliArgs {
   const out: CliArgs = {
     prompt: null,
     promptFiles: [],
@@ -53,6 +152,8 @@ function parseArgs(argv: string[]): CliArgs {
     imageSize: null,
     referenceImages: [],
     n: 1,
+    batchFile: null,
+    jobs: null,
     json: false,
     help: false,
   };
@@ -106,9 +207,34 @@ function parseArgs(argv: string[]): CliArgs {
       continue;
     }
 
+    if (a === "--batchfile") {
+      const v = argv[++i];
+      if (!v) throw new Error("Missing value for --batchfile");
+      out.batchFile = v;
+      continue;
+    }
+
+    if (a === "--jobs") {
+      const v = argv[++i];
+      if (!v) throw new Error("Missing value for --jobs");
+      out.jobs = parseInt(v, 10);
+      if (isNaN(out.jobs) || out.jobs < 1) throw new Error(`Invalid worker count: ${v}`);
+      continue;
+    }
+
     if (a === "--provider") {
       const v = argv[++i];
-      if (v !== "google" && v !== "openai" && v !== "dashscope") throw new Error(`Invalid provider: ${v}`);
+      if (
+        v !== "google" &&
+        v !== "openai" &&
+        v !== "openrouter" &&
+        v !== "dashscope" &&
+        v !== "replicate" &&
+        v !== "jimeng" &&
+        v !== "seedream"
+      ) {
+        throw new Error(`Invalid provider: ${v}`);
+      }
       out.provider = v;
       continue;
     }
@@ -215,18 +341,20 @@ async function loadEnv(): Promise<void> {
   }
 }
 
-function extractYamlFrontMatter(content: string): string | null {
+export function extractYamlFrontMatter(content: string): string | null {
   const match = content.match(/^---\s*\n([\s\S]*?)\n---\s*$/m);
   return match ? match[1] : null;
 }
 
-function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
+export function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
   const config: Partial<ExtendConfig> = {};
   const lines = yaml.split("\n");
   let currentKey: string | null = null;
+  let currentProvider: Provider | null = null;
 
   for (const line of lines) {
     const trimmed = line.trim();
+    const indent = line.match(/^\s*/)?.[0].length ?? 0;
     if (!trimmed || trimmed.startsWith("#")) continue;
 
     if (trimmed.includes(":") && !trimmed.startsWith("-")) {
@@ -243,18 +371,81 @@ function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
       } else if (key === "default_provider") {
         config.default_provider = value === "null" ? null : (value as Provider);
       } else if (key === "default_quality") {
-        config.default_quality = value === "null" ? null : (value as "normal" | "2k");
+        config.default_quality = value === "null" ? null : value as "normal" | "2k";
       } else if (key === "default_aspect_ratio") {
         const cleaned = value.replace(/['"]/g, "");
         config.default_aspect_ratio = cleaned === "null" ? null : cleaned;
       } else if (key === "default_image_size") {
-        config.default_image_size = value === "null" ? null : (value as "1K" | "2K" | "4K");
+        config.default_image_size = value === "null" ? null : value as "1K" | "2K" | "4K";
       } else if (key === "default_model") {
-        config.default_model = { google: null, openai: null, dashscope: null };
+        config.default_model = {
+          google: null,
+          openai: null,
+          openrouter: null,
+          dashscope: null,
+          replicate: null,
+          jimeng: null,
+          seedream: null,
+        };
         currentKey = "default_model";
-      } else if (currentKey === "default_model" && (key === "google" || key === "openai" || key === "dashscope")) {
+        currentProvider = null;
+      } else if (key === "batch") {
+        config.batch = {};
+        currentKey = "batch";
+        currentProvider = null;
+      } else if (currentKey === "batch" && indent >= 2 && key === "max_workers") {
+        config.batch ??= {};
+        config.batch.max_workers = value === "null" ? null : parseInt(value, 10);
+      } else if (currentKey === "batch" && indent >= 2 && key === "provider_limits") {
+        config.batch ??= {};
+        config.batch.provider_limits ??= {};
+        currentKey = "provider_limits";
+        currentProvider = null;
+      } else if (
+        currentKey === "provider_limits" &&
+        indent >= 4 &&
+        (
+          key === "google" ||
+          key === "openai" ||
+          key === "openrouter" ||
+          key === "dashscope" ||
+          key === "replicate" ||
+          key === "jimeng" ||
+          key === "seedream"
+        )
+      ) {
+        config.batch ??= {};
+        config.batch.provider_limits ??= {};
+        config.batch.provider_limits[key] ??= {};
+        currentProvider = key;
+      } else if (
+        currentKey === "default_model" &&
+        (
+          key === "google" ||
+          key === "openai" ||
+          key === "openrouter" ||
+          key === "dashscope" ||
+          key === "replicate" ||
+          key === "jimeng" ||
+          key === "seedream"
+        )
+      ) {
         const cleaned = value.replace(/['"]/g, "");
         config.default_model![key] = cleaned === "null" ? null : cleaned;
+      } else if (
+        currentKey === "provider_limits" &&
+        currentProvider &&
+        indent >= 6 &&
+        (key === "concurrency" || key === "start_interval_ms")
+      ) {
+        config.batch ??= {};
+        config.batch.provider_limits ??= {};
+        const providerLimit = (config.batch.provider_limits[currentProvider] ??= {});
+        if (key === "concurrency") {
+          providerLimit.concurrency = value === "null" ? null : parseInt(value, 10);
+        } else {
+          providerLimit.start_interval_ms = value === "null" ? null : parseInt(value, 10);
+        }
       }
     }
   }
@@ -276,7 +467,6 @@ async function loadExtendConfig(): Promise<Partial<ExtendConfig>> {
       const content = await readFile(p, "utf8");
       const yaml = extractYamlFrontMatter(content);
       if (!yaml) continue;
-
       return parseSimpleYaml(yaml);
     } catch {
       continue;
@@ -286,7 +476,7 @@ async function loadExtendConfig(): Promise<Partial<ExtendConfig>> {
   return {};
 }
 
-function mergeConfig(args: CliArgs, extend: Partial<ExtendConfig>): CliArgs {
+export function mergeConfig(args: CliArgs, extend: Partial<ExtendConfig>): CliArgs {
   return {
     ...args,
     provider: args.provider ?? extend.default_provider ?? null,
@@ -294,6 +484,60 @@ function mergeConfig(args: CliArgs, extend: Partial<ExtendConfig>): CliArgs {
     aspectRatio: args.aspectRatio ?? extend.default_aspect_ratio ?? null,
     imageSize: args.imageSize ?? extend.default_image_size ?? null,
   };
+}
+
+export function parsePositiveInt(value: string | undefined): number | null {
+  if (!value) return null;
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+export function parsePositiveBatchInt(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") {
+    return Number.isInteger(value) && value > 0 ? value : null;
+  }
+  if (typeof value === "string") {
+    return parsePositiveInt(value);
+  }
+  return null;
+}
+
+export function getConfiguredMaxWorkers(extendConfig: Partial<ExtendConfig>): number {
+  const envValue = parsePositiveInt(process.env.BAOYU_IMAGE_GEN_MAX_WORKERS);
+  const configValue = extendConfig.batch?.max_workers ?? null;
+  return Math.max(1, envValue ?? configValue ?? DEFAULT_MAX_WORKERS);
+}
+
+export function getConfiguredProviderRateLimits(
+  extendConfig: Partial<ExtendConfig>
+): Record<Provider, ProviderRateLimit> {
+  const configured: Record<Provider, ProviderRateLimit> = {
+    replicate: { ...DEFAULT_PROVIDER_RATE_LIMITS.replicate },
+    google: { ...DEFAULT_PROVIDER_RATE_LIMITS.google },
+    openai: { ...DEFAULT_PROVIDER_RATE_LIMITS.openai },
+    openrouter: { ...DEFAULT_PROVIDER_RATE_LIMITS.openrouter },
+    dashscope: { ...DEFAULT_PROVIDER_RATE_LIMITS.dashscope },
+    jimeng: { ...DEFAULT_PROVIDER_RATE_LIMITS.jimeng },
+    seedream: { ...DEFAULT_PROVIDER_RATE_LIMITS.seedream },
+  };
+
+  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "jimeng", "seedream"] as Provider[]) {
+    const envPrefix = `BAOYU_IMAGE_GEN_${provider.toUpperCase()}`;
+    const extendLimit = extendConfig.batch?.provider_limits?.[provider];
+    configured[provider] = {
+      concurrency:
+        parsePositiveInt(process.env[`${envPrefix}_CONCURRENCY`]) ??
+        extendLimit?.concurrency ??
+        configured[provider].concurrency,
+      startIntervalMs:
+        parsePositiveInt(process.env[`${envPrefix}_START_INTERVAL_MS`]) ??
+        extendLimit?.start_interval_ms ??
+        configured[provider].startIntervalMs,
+    };
+  }
+
+  return configured;
 }
 
 async function readPromptFromFiles(files: string[]): Promise<string> {
@@ -307,25 +551,42 @@ async function readPromptFromFiles(files: string[]): Promise<string> {
 async function readPromptFromStdin(): Promise<string | null> {
   if (process.stdin.isTTY) return null;
   try {
-    const t = await Bun.stdin.text();
-    const v = t.trim();
-    return v.length > 0 ? v : null;
+    const chunks: Buffer[] = [];
+    for await (const chunk of process.stdin) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const value = Buffer.concat(chunks).toString("utf8").trim();
+    return value.length > 0 ? value : null;
   } catch {
     return null;
   }
 }
 
-function normalizeOutputImagePath(p: string): string {
+export function normalizeOutputImagePath(p: string, defaultExtension = ".png"): string {
   const full = path.resolve(p);
   const ext = path.extname(full);
   if (ext) return full;
-  return `${full}.png`;
+  return `${full}${defaultExtension}`;
 }
 
-function detectProvider(args: CliArgs): Provider {
-  if (args.referenceImages.length > 0 && args.provider && args.provider !== "google" && args.provider !== "openai") {
+function inferProviderFromModel(model: string | null): Provider | null {
+  if (!model) return null;
+  if (model.includes("seedream") || model.includes("seededit")) return "seedream";
+  return null;
+}
+
+export function detectProvider(args: CliArgs): Provider {
+  if (
+    args.referenceImages.length > 0 &&
+    args.provider &&
+    args.provider !== "google" &&
+    args.provider !== "openai" &&
+    args.provider !== "openrouter" &&
+    args.provider !== "replicate" &&
+    args.provider !== "seedream"
+  ) {
     throw new Error(
-      "Reference images require a ref-capable provider. Use --provider google (Gemini multimodal) or --provider openai (GPT Image edits)."
+      "Reference images require a ref-capable provider. Use --provider google (Gemini multimodal), --provider openai (GPT Image edits), --provider openrouter (OpenRouter multimodal), --provider replicate, or --provider seedream for supported Seedream models."
     );
   }
 
@@ -333,28 +594,51 @@ function detectProvider(args: CliArgs): Provider {
 
   const hasGoogle = !!(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY);
   const hasOpenai = !!process.env.OPENAI_API_KEY;
+  const hasOpenrouter = !!process.env.OPENROUTER_API_KEY;
   const hasDashscope = !!process.env.DASHSCOPE_API_KEY;
+  const hasReplicate = !!process.env.REPLICATE_API_TOKEN;
+  const hasJimeng = !!(process.env.JIMENG_ACCESS_KEY_ID && process.env.JIMENG_SECRET_ACCESS_KEY);
+  const hasSeedream = !!process.env.ARK_API_KEY;
+  const modelProvider = inferProviderFromModel(args.model);
+
+  if (modelProvider === "seedream") {
+    if (!hasSeedream) {
+      throw new Error("Model looks like a Volcengine ARK image model, but ARK_API_KEY is not set.");
+    }
+    return "seedream";
+  }
 
   if (args.referenceImages.length > 0) {
     if (hasGoogle) return "google";
     if (hasOpenai) return "openai";
+    if (hasOpenrouter) return "openrouter";
+    if (hasReplicate) return "replicate";
+    if (hasSeedream) return "seedream";
     throw new Error(
-      "Reference images require Google or OpenAI. Set GOOGLE_API_KEY/GEMINI_API_KEY or OPENAI_API_KEY, or remove --ref."
+      "Reference images require Google, OpenAI, OpenRouter, Replicate, or supported Seedream models. Set GOOGLE_API_KEY/GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, REPLICATE_API_TOKEN, or ARK_API_KEY, or remove --ref."
     );
   }
 
-  const available = [hasGoogle && "google", hasOpenai && "openai", hasDashscope && "dashscope"].filter(Boolean) as Provider[];
+  const available = [
+    hasGoogle && "google",
+    hasOpenai && "openai",
+    hasOpenrouter && "openrouter",
+    hasDashscope && "dashscope",
+    hasReplicate && "replicate",
+    hasJimeng && "jimeng",
+    hasSeedream && "seedream",
+  ].filter(Boolean) as Provider[];
 
   if (available.length === 1) return available[0]!;
   if (available.length > 1) return available[0]!;
 
   throw new Error(
-    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, or DASHSCOPE_API_KEY.\n" +
+    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, DASHSCOPE_API_KEY, REPLICATE_API_TOKEN, JIMENG keys, or ARK_API_KEY.\n" +
       "Create ~/.baoyu-skills/.env or <cwd>/.baoyu-skills/.env with your keys."
   );
 }
 
-async function validateReferenceImages(referenceImages: string[]): Promise<void> {
+export async function validateReferenceImages(referenceImages: string[]): Promise<void> {
   for (const refPath of referenceImages) {
     const fullPath = path.resolve(refPath);
     try {
@@ -365,12 +649,7 @@ async function validateReferenceImages(referenceImages: string[]): Promise<void>
   }
 }
 
-type ProviderModule = {
-  getDefaultModel: () => string;
-  generateImage: (prompt: string, model: string, args: CliArgs) => Promise<Uint8Array>;
-};
-
-function isRetryableGenerationError(error: unknown): boolean {
+export function isRetryableGenerationError(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);
   const nonRetryableMarkers = [
     "Reference image",
@@ -378,23 +657,365 @@ function isRetryableGenerationError(error: unknown): boolean {
     "only supported",
     "No API key found",
     "is required",
+    "Invalid ",
+    "Unexpected ",
+    "API error (400)",
+    "API error (401)",
+    "API error (402)",
+    "API error (403)",
+    "API error (404)",
+    "temporarily disabled",
   ];
   return !nonRetryableMarkers.some((marker) => msg.includes(marker));
 }
 
 async function loadProviderModule(provider: Provider): Promise<ProviderModule> {
-  if (provider === "google") {
-    return (await import("./providers/google")) as ProviderModule;
-  }
-  if (provider === "dashscope") {
-    return (await import("./providers/dashscope")) as ProviderModule;
-  }
+  if (provider === "google") return (await import("./providers/google")) as ProviderModule;
+  if (provider === "dashscope") return (await import("./providers/dashscope")) as ProviderModule;
+  if (provider === "replicate") return (await import("./providers/replicate")) as ProviderModule;
+  if (provider === "openrouter") return (await import("./providers/openrouter")) as ProviderModule;
+  if (provider === "jimeng") return (await import("./providers/jimeng")) as ProviderModule;
+  if (provider === "seedream") return (await import("./providers/seedream")) as ProviderModule;
   return (await import("./providers/openai")) as ProviderModule;
+}
+
+async function loadPromptForArgs(args: CliArgs): Promise<string | null> {
+  let prompt: string | null = args.prompt;
+  if (!prompt && args.promptFiles.length > 0) {
+    prompt = await readPromptFromFiles(args.promptFiles);
+  }
+  return prompt;
+}
+
+function getModelForProvider(
+  provider: Provider,
+  requestedModel: string | null,
+  extendConfig: Partial<ExtendConfig>,
+  providerModule: ProviderModule
+): string {
+  if (requestedModel) return requestedModel;
+  if (extendConfig.default_model) {
+    if (provider === "google" && extendConfig.default_model.google) return extendConfig.default_model.google;
+    if (provider === "openai" && extendConfig.default_model.openai) return extendConfig.default_model.openai;
+    if (provider === "openrouter" && extendConfig.default_model.openrouter) {
+      return extendConfig.default_model.openrouter;
+    }
+    if (provider === "dashscope" && extendConfig.default_model.dashscope) return extendConfig.default_model.dashscope;
+    if (provider === "replicate" && extendConfig.default_model.replicate) return extendConfig.default_model.replicate;
+    if (provider === "jimeng" && extendConfig.default_model.jimeng) return extendConfig.default_model.jimeng;
+    if (provider === "seedream" && extendConfig.default_model.seedream) return extendConfig.default_model.seedream;
+  }
+  return providerModule.getDefaultModel();
+}
+
+async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConfig>): Promise<PreparedTask> {
+  if (!args.quality) args.quality = "2k";
+
+  const prompt = (await loadPromptForArgs(args)) ?? (await readPromptFromStdin());
+  if (!prompt) throw new Error("Prompt is required");
+  if (!args.imagePath) throw new Error("--image is required");
+  if (args.referenceImages.length > 0) await validateReferenceImages(args.referenceImages);
+
+  const provider = detectProvider(args);
+  const providerModule = await loadProviderModule(provider);
+  const model = getModelForProvider(provider, args.model, extendConfig, providerModule);
+  providerModule.validateArgs?.(model, args);
+  const defaultOutputExtension = providerModule.getDefaultOutputExtension?.(model, args) ?? ".png";
+
+  return {
+    id: "single",
+    prompt,
+    args,
+    provider,
+    model,
+    outputPath: normalizeOutputImagePath(args.imagePath, defaultOutputExtension),
+    providerModule,
+  };
+}
+
+export async function loadBatchTasks(batchFilePath: string): Promise<LoadedBatchTasks> {
+  const resolvedBatchFilePath = path.resolve(batchFilePath);
+  const content = await readFile(resolvedBatchFilePath, "utf8");
+  const parsed = JSON.parse(content.replace(/^\uFEFF/, "")) as BatchFile;
+  const batchDir = path.dirname(resolvedBatchFilePath);
+  if (Array.isArray(parsed)) {
+    return {
+      tasks: parsed,
+      jobs: null,
+      batchDir,
+    };
+  }
+  if (parsed && typeof parsed === "object" && Array.isArray(parsed.tasks)) {
+    const jobs = parsePositiveBatchInt(parsed.jobs);
+    if (parsed.jobs !== undefined && parsed.jobs !== null && jobs === null) {
+      throw new Error("Invalid batch file. jobs must be a positive integer when provided.");
+    }
+    return {
+      tasks: parsed.tasks,
+      jobs,
+      batchDir,
+    };
+  }
+  throw new Error("Invalid batch file. Expected an array of tasks or an object with a tasks array.");
+}
+
+export function resolveBatchPath(batchDir: string, filePath: string): string {
+  return path.isAbsolute(filePath) ? filePath : path.resolve(batchDir, filePath);
+}
+
+export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir: string): CliArgs {
+  return {
+    ...baseArgs,
+    prompt: task.prompt ?? null,
+    promptFiles: task.promptFiles ? task.promptFiles.map((filePath) => resolveBatchPath(batchDir, filePath)) : [],
+    imagePath: task.image ? resolveBatchPath(batchDir, task.image) : null,
+    provider: task.provider ?? baseArgs.provider ?? null,
+    model: task.model ?? baseArgs.model ?? null,
+    aspectRatio: task.ar ?? baseArgs.aspectRatio ?? null,
+    size: task.size ?? baseArgs.size ?? null,
+    quality: task.quality ?? baseArgs.quality ?? null,
+    imageSize: task.imageSize ?? baseArgs.imageSize ?? null,
+    referenceImages: task.ref ? task.ref.map((filePath) => resolveBatchPath(batchDir, filePath)) : [],
+    n: task.n ?? baseArgs.n,
+    batchFile: null,
+    jobs: baseArgs.jobs,
+    json: baseArgs.json,
+    help: false,
+  };
+}
+
+async function prepareBatchTasks(
+  args: CliArgs,
+  extendConfig: Partial<ExtendConfig>
+): Promise<{ tasks: PreparedTask[]; jobs: number | null }> {
+  if (!args.batchFile) throw new Error("--batchfile is required in batch mode");
+  const { tasks: taskInputs, jobs: batchJobs, batchDir } = await loadBatchTasks(args.batchFile);
+  if (taskInputs.length === 0) throw new Error("Batch file does not contain any tasks.");
+
+  const prepared: PreparedTask[] = [];
+  for (let i = 0; i < taskInputs.length; i++) {
+    const task = taskInputs[i]!;
+    const taskArgs = createTaskArgs(args, task, batchDir);
+    const prompt = await loadPromptForArgs(taskArgs);
+    if (!prompt) throw new Error(`Task ${i + 1} is missing prompt or promptFiles.`);
+    if (!taskArgs.imagePath) throw new Error(`Task ${i + 1} is missing image output path.`);
+    if (taskArgs.referenceImages.length > 0) await validateReferenceImages(taskArgs.referenceImages);
+
+    const provider = detectProvider(taskArgs);
+    const providerModule = await loadProviderModule(provider);
+    const model = getModelForProvider(provider, taskArgs.model, extendConfig, providerModule);
+    providerModule.validateArgs?.(model, taskArgs);
+    const defaultOutputExtension = providerModule.getDefaultOutputExtension?.(model, taskArgs) ?? ".png";
+    prepared.push({
+      id: task.id || `task-${String(i + 1).padStart(2, "0")}`,
+      prompt,
+      args: taskArgs,
+      provider,
+      model,
+      outputPath: normalizeOutputImagePath(taskArgs.imagePath, defaultOutputExtension),
+      providerModule,
+    });
+  }
+
+  return {
+    tasks: prepared,
+    jobs: args.jobs ?? batchJobs,
+  };
+}
+
+async function writeImage(outputPath: string, imageData: Uint8Array): Promise<void> {
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, imageData);
+}
+
+async function generatePreparedTask(task: PreparedTask): Promise<TaskResult> {
+  console.error(`Using ${task.provider} / ${task.model} for ${task.id}`);
+  console.error(
+    `Switch model: --model <id> | EXTEND.md default_model.${task.provider} | env ${task.provider.toUpperCase()}_IMAGE_MODEL`
+  );
+
+  let attempts = 0;
+  while (attempts < MAX_ATTEMPTS) {
+    attempts += 1;
+    try {
+      const imageData = await task.providerModule.generateImage(task.prompt, task.model, task.args);
+      await writeImage(task.outputPath, imageData);
+      return {
+        id: task.id,
+        provider: task.provider,
+        model: task.model,
+        outputPath: task.outputPath,
+        success: true,
+        attempts,
+        error: null,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const canRetry = attempts < MAX_ATTEMPTS && isRetryableGenerationError(error);
+      if (canRetry) {
+        console.error(`[${task.id}] Attempt ${attempts}/${MAX_ATTEMPTS} failed, retrying...`);
+        continue;
+      }
+      return {
+        id: task.id,
+        provider: task.provider,
+        model: task.model,
+        outputPath: task.outputPath,
+        success: false,
+        attempts,
+        error: message,
+      };
+    }
+  }
+
+  return {
+    id: task.id,
+    provider: task.provider,
+    model: task.model,
+    outputPath: task.outputPath,
+    success: false,
+    attempts: MAX_ATTEMPTS,
+    error: "Unknown failure",
+  };
+}
+
+function createProviderGate(providerRateLimits: Record<Provider, ProviderRateLimit>) {
+  const state = new Map<Provider, { active: number; lastStartedAt: number }>();
+
+  return async function acquire(provider: Provider): Promise<() => void> {
+    const limit = providerRateLimits[provider];
+    while (true) {
+      const current = state.get(provider) ?? { active: 0, lastStartedAt: 0 };
+      const now = Date.now();
+      const enoughCapacity = current.active < limit.concurrency;
+      const enoughGap = now - current.lastStartedAt >= limit.startIntervalMs;
+      if (enoughCapacity && enoughGap) {
+        state.set(provider, { active: current.active + 1, lastStartedAt: now });
+        return () => {
+          const latest = state.get(provider) ?? { active: 1, lastStartedAt: now };
+          state.set(provider, {
+            active: Math.max(0, latest.active - 1),
+            lastStartedAt: latest.lastStartedAt,
+          });
+        };
+      }
+      await new Promise((resolve) => setTimeout(resolve, POLL_WAIT_MS));
+    }
+  };
+}
+
+export function getWorkerCount(taskCount: number, jobs: number | null, maxWorkers: number): number {
+  const requested = jobs ?? Math.min(taskCount, maxWorkers);
+  return Math.max(1, Math.min(requested, taskCount, maxWorkers));
+}
+
+async function runBatchTasks(
+  tasks: PreparedTask[],
+  jobs: number | null,
+  extendConfig: Partial<ExtendConfig>
+): Promise<TaskResult[]> {
+  if (tasks.length === 1) {
+    return [await generatePreparedTask(tasks[0]!)];
+  }
+
+  const maxWorkers = getConfiguredMaxWorkers(extendConfig);
+  const providerRateLimits = getConfiguredProviderRateLimits(extendConfig);
+  const acquireProvider = createProviderGate(providerRateLimits);
+  const workerCount = getWorkerCount(tasks.length, jobs, maxWorkers);
+  console.error(`Batch mode: ${tasks.length} tasks, ${workerCount} workers, parallel mode enabled.`);
+  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "jimeng", "seedream"] as Provider[]) {
+    const limit = providerRateLimits[provider];
+    console.error(`- ${provider}: concurrency=${limit.concurrency}, startIntervalMs=${limit.startIntervalMs}`);
+  }
+
+  let nextIndex = 0;
+  const results: TaskResult[] = new Array(tasks.length);
+
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      if (currentIndex >= tasks.length) return;
+
+      const task = tasks[currentIndex]!;
+      const release = await acquireProvider(task.provider);
+      try {
+        results[currentIndex] = await generatePreparedTask(task);
+      } finally {
+        release();
+      }
+    }
+  };
+
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
+
+function printBatchSummary(results: TaskResult[]): void {
+  const successCount = results.filter((result) => result.success).length;
+  const failureCount = results.length - successCount;
+
+  console.error("");
+  console.error("Batch generation summary:");
+  console.error(`- Total: ${results.length}`);
+  console.error(`- Succeeded: ${successCount}`);
+  console.error(`- Failed: ${failureCount}`);
+
+  if (failureCount > 0) {
+    console.error("Failure reasons:");
+    for (const result of results.filter((item) => !item.success)) {
+      console.error(`- ${result.id}: ${result.error}`);
+    }
+  }
+}
+
+function emitJson(payload: unknown): void {
+  console.log(JSON.stringify(payload, null, 2));
+}
+
+async function runSingleMode(args: CliArgs, extendConfig: Partial<ExtendConfig>): Promise<void> {
+  const task = await prepareSingleTask(args, extendConfig);
+  const result = await generatePreparedTask(task);
+  if (!result.success) {
+    throw new Error(result.error || "Generation failed");
+  }
+
+  if (args.json) {
+    emitJson({
+      savedImage: result.outputPath,
+      provider: result.provider,
+      model: result.model,
+      attempts: result.attempts,
+      prompt: task.prompt.slice(0, 200),
+    });
+    return;
+  }
+
+  console.log(result.outputPath);
+}
+
+async function runBatchMode(args: CliArgs, extendConfig: Partial<ExtendConfig>): Promise<void> {
+  const { tasks, jobs } = await prepareBatchTasks(args, extendConfig);
+  const results = await runBatchTasks(tasks, jobs, extendConfig);
+  printBatchSummary(results);
+
+  if (args.json) {
+    emitJson({
+      mode: "batch",
+      total: results.length,
+      succeeded: results.filter((item) => item.success).length,
+      failed: results.filter((item) => !item.success).length,
+      results,
+    });
+  }
+
+  if (results.some((item) => !item.success)) {
+    process.exitCode = 1;
+  }
 }
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-
   if (args.help) {
     printUsage();
     return;
@@ -403,85 +1024,31 @@ async function main(): Promise<void> {
   await loadEnv();
   const extendConfig = await loadExtendConfig();
   const mergedArgs = mergeConfig(args, extendConfig);
-
   if (!mergedArgs.quality) mergedArgs.quality = "2k";
 
-  let prompt: string | null = mergedArgs.prompt;
-  if (!prompt && mergedArgs.promptFiles.length > 0) prompt = await readPromptFromFiles(mergedArgs.promptFiles);
-  if (!prompt) prompt = await readPromptFromStdin();
-
-  if (!prompt) {
-    console.error("Error: Prompt is required");
-    printUsage();
-    process.exitCode = 1;
+  if (mergedArgs.batchFile) {
+    await runBatchMode(mergedArgs, extendConfig);
     return;
   }
 
-  if (!mergedArgs.imagePath) {
-    console.error("Error: --image is required");
-    printUsage();
-    process.exitCode = 1;
-    return;
-  }
+  await runSingleMode(mergedArgs, extendConfig);
+}
 
-  if (mergedArgs.referenceImages.length > 0) {
-    await validateReferenceImages(mergedArgs.referenceImages);
-  }
+function isDirectExecution(metaUrl: string): boolean {
+  const entryPath = process.argv[1];
+  if (!entryPath) return false;
 
-  const provider = detectProvider(mergedArgs);
-  const providerModule = await loadProviderModule(provider);
-
-  let model = mergedArgs.model;
-  if (!model && extendConfig.default_model) {
-    if (provider === "google") model = extendConfig.default_model.google ?? null;
-    if (provider === "openai") model = extendConfig.default_model.openai ?? null;
-    if (provider === "dashscope") model = extendConfig.default_model.dashscope ?? null;
-  }
-  model = model || providerModule.getDefaultModel();
-
-  const outputPath = normalizeOutputImagePath(mergedArgs.imagePath);
-
-  let imageData: Uint8Array;
-  let retried = false;
-
-  while (true) {
-    try {
-      imageData = await providerModule.generateImage(prompt, model, mergedArgs);
-      break;
-    } catch (e) {
-      if (!retried && isRetryableGenerationError(e)) {
-        retried = true;
-        console.error("Generation failed, retrying...");
-        continue;
-      }
-      throw e;
-    }
-  }
-
-  const dir = path.dirname(outputPath);
-  await mkdir(dir, { recursive: true });
-  await writeFile(outputPath, imageData);
-
-  if (mergedArgs.json) {
-    console.log(
-      JSON.stringify(
-        {
-          savedImage: outputPath,
-          provider,
-          model,
-          prompt: prompt.slice(0, 200),
-        },
-        null,
-        2
-      )
-    );
-  } else {
-    console.log(outputPath);
+  try {
+    return path.resolve(entryPath) === fileURLToPath(metaUrl);
+  } catch {
+    return false;
   }
 }
 
-main().catch((e) => {
-  const msg = e instanceof Error ? e.message : String(e);
-  console.error(msg);
-  process.exit(1);
-});
+if (isDirectExecution(import.meta.url)) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    process.exit(1);
+  });
+}

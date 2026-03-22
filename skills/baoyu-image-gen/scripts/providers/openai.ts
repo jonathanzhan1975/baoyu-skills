@@ -8,7 +8,7 @@ export function getDefaultModel(): string {
 
 type OpenAIImageResponse = { data: Array<{ url?: string; b64_json?: string }> };
 
-function parseAspectRatio(ar: string): { width: number; height: number } | null {
+export function parseAspectRatio(ar: string): { width: number; height: number } | null {
   const match = ar.match(/^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/);
   if (!match) return null;
   const w = parseFloat(match[1]!);
@@ -23,7 +23,7 @@ type SizeMapping = {
   portrait: string;
 };
 
-function getOpenAISize(
+export function getOpenAISize(
   model: string,
   ar: string | null,
   quality: CliArgs["quality"]
@@ -68,7 +68,15 @@ export async function generateImage(
   const baseURL = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) throw new Error("OPENAI_API_KEY is required");
+  if (!apiKey) {
+    throw new Error(
+      "OPENAI_API_KEY is required. Codex/ChatGPT desktop login does not automatically grant OpenAI Images API access to this script."
+    );
+  }
+
+  if (process.env.OPENAI_IMAGE_USE_CHAT === "true") {
+    return generateWithChatCompletions(baseURL, apiKey, prompt, model);
+  }
 
   const size = args.size || getOpenAISize(model, args.aspectRatio, args.quality);
 
@@ -82,6 +90,40 @@ export async function generateImage(
   }
 
   return generateWithOpenAIGenerations(baseURL, apiKey, prompt, model, size, args.quality);
+}
+
+async function generateWithChatCompletions(
+  baseURL: string,
+  apiKey: string,
+  prompt: string,
+  model: string
+): Promise<Uint8Array> {
+  const res = await fetch(`${baseURL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`OpenAI API error: ${err}`);
+  }
+
+  const result = (await res.json()) as { choices: Array<{ message: { content: string } }> };
+  const content = result.choices[0]?.message?.content ?? "";
+
+  const match = content.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
+  if (match) {
+    return Uint8Array.from(Buffer.from(match[1]!, "base64"));
+  }
+
+  throw new Error("No image found in chat completions response");
 }
 
 async function generateWithOpenAIGenerations(
@@ -159,7 +201,7 @@ async function generateWithOpenAIEdits(
   return extractImageFromResponse(result);
 }
 
-function getMimeType(filename: string): string {
+export function getMimeType(filename: string): string {
   const ext = path.extname(filename).toLowerCase();
   if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
   if (ext === ".webp") return "image/webp";
@@ -167,7 +209,7 @@ function getMimeType(filename: string): string {
   return "image/png";
 }
 
-async function extractImageFromResponse(result: OpenAIImageResponse): Promise<Uint8Array> {
+export async function extractImageFromResponse(result: OpenAIImageResponse): Promise<Uint8Array> {
   const img = result.data[0];
 
   if (img?.b64_json) {

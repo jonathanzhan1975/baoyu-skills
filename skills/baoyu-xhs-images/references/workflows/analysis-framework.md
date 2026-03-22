@@ -195,4 +195,4 @@ Before proceeding to outline generation:
 - [ ] Have I identified save/share triggers?
 - [ ] Are there clear visual opportunities?
 - [ ] Is the swipe flow planned?
-- [ ] Have I selected 3 style+layout combinations?
+- [ ] Have I identified the best style+layout recommendation?

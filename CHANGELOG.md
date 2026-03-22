@@ -2,6 +2,502 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.76.1 - 2026-03-21
+
+### Documentation
+- `baoyu-youtube-transcript`: fix zsh glob issue — always single-quote YouTube URLs when running the script
+
+## 1.76.0 - 2026-03-21
+
+### Features
+- `baoyu-youtube-transcript`: add title heading, description summary, and cover image to markdown output
+
+### Fixes
+- `baoyu-markdown-to-html`: use process.execPath and tsx import in test runner
+
+## 1.75.0 - 2026-03-21
+
+### Features
+- `baoyu-youtube-transcript`: new skill — download YouTube video transcripts/subtitles and cover images with multi-language, chapters, and speaker identification support
+
+## 1.74.1 - 2026-03-21
+
+### Fixes
+- `baoyu-image-gen`: align OpenRouter image generation with current API, harden image support, and narrow Gemini aspect ratios (by @cwandev)
+- `baoyu-image-gen`: broaden OpenRouter model detection and aspect ratio validation
+
+## 1.74.0 - 2026-03-20
+
+### Features
+- `baoyu-markdown-to-html`: CLI now supports all rendering options — color, font-family, font-size, code-theme, mac-code-block, line-number, count, legend
+
+### Fixes
+- `baoyu-markdown-to-html`: fix CSS custom property regex to handle quoted values; grace/simple themes now layer default CSS
+
+## 1.73.3 - 2026-03-20
+
+### Fixes
+- `baoyu-post-to-wechat`: fix placeholder replacement to avoid shorter placeholders matching longer numbered variants
+
+## 1.73.2 - 2026-03-20
+
+### Fixes
+- `baoyu-post-to-wechat`: fix body image upload to correctly use media/uploadimg API with format and size validation (by @AICreator-Wind)
+
+### Refactor
+- `baoyu-post-to-wechat`: extract image processor module for local format conversion (WebP/BMP/GIF → JPEG/PNG) instead of material API fallback
+
+## 1.73.1 - 2026-03-18
+
+### Refactor
+- `baoyu-danger-x-to-markdown`: migrate tests from bun:test to node:test
+
+## 1.73.0 - 2026-03-18
+
+### Features
+- `baoyu-danger-x-to-markdown`: add video media support for X articles with poster image and video link rendering
+
+## 1.72.0 - 2026-03-18
+
+### Features
+- `baoyu-danger-x-to-markdown`: add MARKDOWN entity support for rendering embedded markdown/code blocks in X articles
+
+## 1.71.0 - 2026-03-17
+
+### Features
+- `baoyu-image-gen`: add Seedream reference image support for 5.0/4.5/4.0 models with model-specific size validation
+
+## 1.70.0 - 2026-03-17
+
+### Features
+- `baoyu-format-markdown`: optimize title generation with formula-based recommendations and straightforward alternatives
+- `baoyu-format-markdown`: auto-generate dual summaries (`summary` + `description`) in frontmatter
+
+## 1.69.1 - 2026-03-16
+
+### Fixes
+- `baoyu-chrome-cdp`: tighten chrome auto-connect logic to reduce false positives
+
+## 1.69.0 - 2026-03-16
+
+### Features
+- `baoyu-chrome-cdp`: support connecting to existing Chrome session (by @bviews)
+
+### Fixes
+- `baoyu-chrome-cdp`: support Chrome 146 native remote debugging in approval mode (by @bviews)
+- `baoyu-chrome-cdp`: keep HTTP validation in findExistingChromeDebugPort (by @bviews)
+- `baoyu-danger-gemini-web`: reuse openPageSession and fix orphaned tab leak (by @bviews)
+- `baoyu-danger-gemini-web`: respect explicit profile config over auto-discovery (by @bviews)
+- `baoyu-danger-gemini-web`: respect BAOYU_CHROME_PROFILE_DIR in auto-discovery skip (by @bviews)
+- `baoyu-post-to-wechat`: improve browser publishing reliability (by @cfh-7598)
+
+### Documentation
+- `baoyu-cover-image`: clarify people reference image workflow and interactive confirmation
+
+## 1.68.0 - 2026-03-14
+
+### Features
+- `baoyu-article-illustrator`: add configurable output directory (`default_output_dir`) with 4 options — `imgs-subdir`, `same-dir`, `illustrations-subdir`, `independent`
+- `baoyu-cover-image`: add character preservation from reference images — use `usage: direct` to pass people references to model for stylized likeness
+
+## 1.67.0 - 2026-03-13
+
+### Features
+- `baoyu-image-gen`: add qwen-image-2.0-pro model support for DashScope provider with free-form sizes and text rendering (by @JianJang2017)
+
+## 1.66.1 - 2026-03-13
+
+### Tests
+- Migrate test files from centralized `tests/` directory to colocate with source code
+- Convert tests from `.mjs` to TypeScript (`.test.ts`) with `tsx` runner
+- Add npm workspaces configuration and npm cache to CI workflow
+
+## 1.66.0 - 2026-03-13
+
+### Features
+- `baoyu-image-gen`: add Jimeng (即梦) and Seedream (豆包) image generation providers (by @lindaifeng)
+
+### Fixes
+- `baoyu-image-gen`: tighten Jimeng provider behavior
+
+### Refactor
+- `baoyu-image-gen`: export functions for testability and add module entry guard
+
+### Documentation
+- `baoyu-image-gen`: add Jimeng and Seedream provider documentation to SKILL.md and READMEs
+
+### Tests
+- Add test infrastructure with CI workflow and image-gen unit tests
+
+## 1.65.1 - 2026-03-13
+
+### Refactor
+- `baoyu-translate`: replace remark/unified with markdown-it for chunk parsing, add main.ts CLI entry point
+
+## 1.65.0 - 2026-03-13
+
+### Features
+- `baoyu-post-to-wechat`: add placeholder image upload support with deduplication for markdown-embedded images
+
+### Fixes
+- `baoyu-post-to-wechat`: fix frontmatter parsing to allow leading whitespace and optional trailing newline
+
+### Refactor
+- `baoyu-post-to-wechat`: replace `renderMarkdownToHtml` with `renderMarkdownWithPlaceholders` for structured output
+
+## 1.64.0 - 2026-03-13
+
+### Features
+- `baoyu-image-gen`: add OpenRouter provider with support for image generation, reference images, and configurable models
+
+## 1.63.0 - 2026-03-13
+
+### Features
+- `baoyu-url-to-markdown`: add hosted `defuddle.md` API fallback when local browser capture fails
+- `baoyu-url-to-markdown`: extract YouTube transcript/caption text into markdown output
+- `baoyu-url-to-markdown`: materialize shadow DOM content for better web-component page conversion
+- `baoyu-url-to-markdown`: include language hint in markdown front matter when available
+
+### Refactor
+- `baoyu-url-to-markdown`: split monolithic converter into defuddle, legacy, and shared modules
+
+### Documentation
+- Fix Claude Code marketplace repo casing in READMEs
+
+## 1.62.0 - 2026-03-12
+
+### Features
+- `baoyu-infographic`: support flexible aspect ratios with custom W:H values (e.g., 3:4, 4:3, 2.35:1) in addition to named presets
+
+### Fixes
+- Set strict mode on plugins to prevent duplicated slash commands
+
+### Documentation
+- `baoyu-post-to-wechat`: replace credential-like placeholders
+
+## 1.61.0 - 2026-03-11
+
+### Features
+- `baoyu-post-to-wechat`: add multi-account support with `--account` CLI arg, EXTEND.md accounts block, isolated Chrome profiles, and credential resolution chain
+
+### Fixes
+- Exclude `out/dist/build` dirs and `bun.lockb` from skill release files
+- Use proper MIME types in skill publish to fix ClawhHub rejection
+
+## 1.60.0 - 2026-03-11
+
+### Features
+- `baoyu-url-to-markdown`: support reusing existing Chrome CDP instances and fix port detection order
+
+### Fixes
+- `baoyu-post-to-x`: add missing `fs` import in x-article
+
+### Refactor
+- Unify all CDP skills to use shared `baoyu-chrome-cdp` package with vendored copies
+- Simplify CLAUDE.md, move detailed documentation to `docs/` directory
+- Publish skills directly from synced vendor, removing separate artifact preparation step
+
+## 1.59.1 - 2026-03-11
+
+### Fixes
+- `baoyu-translate`: improve short text annotation density rule and add explicit style preset passing to 02-prompt.md
+- `baoyu-post-to-x`: remove `--disable-blink-features=AutomationControlled` Chrome flag
+
+### Refactor
+- `baoyu-post-to-weibo`: add entry point guard to md-to-html.ts for module import compatibility
+- Replace clawhub CLI with local sync-clawhub.mjs script
+
+### Documentation
+- Update CLAUDE.md to reflect v1.59.0 codebase state (by @jackL1020)
+
+## 1.59.0 - 2026-03-09
+
+### Features
+- `baoyu-image-gen`: add batch parallel image generation and provider-level throttling (by @SeamoonAO)
+
+### Fixes
+- `baoyu-image-gen`: restore Google as default provider when multiple keys available
+
+### Documentation
+- Improve skill documentation clarity (by @SeamoonAO)
+
+## 1.58.0 - 2026-03-08
+
+### Features
+- Add XDG config path support for EXTEND.md (by @liby)
+
+### Fixes
+- `baoyu-post-to-wechat`: surface agent-browser startup errors
+- `baoyu-post-to-wechat`: harden agent-browser command and eval handling (by @luojiyin1987)
+- `baoyu-image-gen`: use execFileSync for google curl requests (by @luojiyin1987)
+- `baoyu-format-markdown`: use spawnSync for autocorrect command (by @luojiyin1987)
+
+### Documentation
+- Fix CLAUDE dependency statement (by @luojiyin1987)
+- Add markdown-to-html to README utility skills (by @luojiyin1987)
+
+## 1.57.0 - 2026-03-08
+
+### Features
+- Add ClawHub/OpenClaw publishing support with sync script and README documentation
+
+### Refactor
+- Add openclaw metadata to all skill frontmatter for ClawHub registry compatibility
+- Rename `SKILL_DIR` to `baseDir` across all skills for consistency
+- `baoyu-danger-gemini-web`, `baoyu-danger-x-to-markdown`: dynamic script path in usage display
+- `baoyu-comic`, `baoyu-xhs-images`: use skill interface instead of direct script invocation for image generation
+
+## 1.56.1 - 2026-03-08
+
+### Fixes
+- `baoyu-post-to-weibo`: simplify article image insertion with Backspace-based placeholder deletion for ProseMirror compatibility
+
+## 1.56.0 - 2026-03-08
+
+### Features
+- `baoyu-article-illustrator`: preset-first selection flow with categorized style presets by content type
+- `baoyu-xhs-images`: streamline workflow from 6 to 4 steps with Smart Confirm (Quick/Customize/Detailed paths)
+
+### Fixes
+- `baoyu-post-to-wechat`: improve image upload reliability with file chooser interception and fallback
+
+## 1.55.0 - 2026-03-08
+
+### Features
+- `baoyu-article-illustrator`: add screen-print style and `--preset` flag for quick type + style selection
+- `baoyu-cover-image`: add screen-print rendering and duotone palette with 5 new style presets
+- `baoyu-xhs-images`: add screen-print style and `--preset` flag with 23 built-in presets
+
+### Documentation
+- Add credits section to both READMEs acknowledging open source inspirations
+
+## 1.54.1 - 2026-03-07
+
+### Fixes
+- `baoyu-post-to-x`: keep composed posts open in Chrome so users can review and publish manually
+
+### Documentation
+- `baoyu-post-to-x`: document default post type selection and manual publishing flow
+- `README`: add Star History charts to the English and Chinese READMEs
+
+## 1.54.0 - 2026-03-06
+
+### Features
+- `baoyu-format-markdown`: improve title and summary generation with style-differentiated candidates, prohibited patterns, and hook-first principles
+- `baoyu-markdown-to-html`: add `--cite` option to convert ordinary external links to numbered bottom citations
+- `baoyu-post-to-wechat`: enable bottom citations by default for markdown input, add `--no-cite` flag to disable
+- `baoyu-translate`: support external glossary files via `glossary_files` in EXTEND.md (markdown table or YAML)
+- `baoyu-translate`: add frontmatter transformation rules to rename source metadata fields with `source` prefix
+
+## 1.53.0 - 2026-03-06
+
+### Features
+- `baoyu-url-to-markdown`: save rendered HTML snapshot as `-captured.html` alongside markdown output
+- `baoyu-url-to-markdown`: Defuddle-first markdown conversion with automatic fallback to legacy Readability/selector extractor
+
+## 1.52.0 - 2026-03-06
+
+### Features
+- `baoyu-post-to-weibo`: add video upload support via `--video` flag (max 18 files total)
+- `baoyu-post-to-weibo`: switch from clipboard paste to `DOM.setFileInputFiles` for more reliable uploads
+
+### Fixes
+- `baoyu-post-to-weibo`: add Chrome health check with auto-restart for unresponsive instances
+- `baoyu-post-to-weibo`: add navigation check to ensure Weibo home page before posting
+
+## 1.51.2 - 2026-03-06
+
+### Fixes
+- `release-skills`: replace explicit language filename patterns (e.g. `CHANGELOG.de.md`) with generic pattern to avoid Gen Agent Trust Hub URL scanner false positive
+- `baoyu-infographic`: add credential/secret stripping instructions to address Snyk W007 insecure credential handling audit
+
+## 1.51.1 - 2026-03-06
+
+### Refactor
+- Unify Chrome CDP profile path — all skills now share `baoyu-skills/chrome-profile` instead of per-skill directories
+- Fix `baoyu-post-to-weibo` incorrectly reusing `x-browser-profile` path
+
+### Fixes
+- Remove `curl | bash` remote code execution pattern from all install instructions
+- Enforce HTTPS-only for remote image downloads in `md-to-html` scripts
+- Add redirect limit (max 5) to prevent infinite redirect loops
+- Add Security Guidelines section to CLAUDE.md
+
+## 1.51.0 - 2026-03-06
+
+### Features
+- `baoyu-post-to-weibo`: new skill for posting to Weibo — supports text posts with images and headline articles (头条文章) via Chrome CDP
+- `baoyu-format-markdown`: add title/summary multi-candidate selection — generates 3 candidates for user to pick, with `auto_select` EXTEND.md support
+
+## 1.50.0 - 2026-03-06
+
+### Features
+- `baoyu-translate`: expand translation style presets from 4 to 9 — add academic, business, humorous, conversational, and elegant styles
+- `baoyu-translate`: add `--style` CLI flag for per-invocation style override
+- `baoyu-translate`: integrate style instructions into subagent prompt template
+
+## 1.49.0 - 2026-03-06
+
+### Features
+- `baoyu-format-markdown`: add reader-perspective content analysis phase — analyzes highlights, structure, and formatting issues before applying formatting
+- `baoyu-format-markdown`: restructure workflow from 8 steps to 7 with explicit do/don't formatting principles and completion report
+- `baoyu-translate`: extract Step 2 workflow mechanics to separate reference file for cleaner SKILL.md
+- `baoyu-translate`: expand trigger keywords (改成中文, 快翻, 本地化, etc.) for better skill activation
+- `baoyu-translate`: add proactive warning for long content in quick mode
+- `baoyu-translate`: save frontmatter to `chunks/frontmatter.md` during chunking
+
+## 1.48.2 - 2026-03-06
+
+### Features
+- `baoyu-translate`: add figurative language & emotional fidelity review steps to refined workflow critique and revision stages
+- `baoyu-translate`: enhance quick mode to enforce meaning-first translation principles for figurative language
+
+## 1.48.1 - 2026-03-05
+
+### Features
+- `baoyu-translate`: add figurative language & metaphor mapping to analysis step — interprets metaphors, idioms, and implied meanings before translation instead of translating literally
+- `baoyu-translate`: add "meaning over words", "figurative language", and "emotional fidelity" translation principles to SKILL.md, refined workflow, and subagent prompt template
+
+## 1.48.0 - 2026-03-05
+
+### Features
+- `baoyu-translate`: add `--output-dir` option to chunk.ts — chunks now write to the translation output directory instead of the source file directory
+- `baoyu-translate`: improve refined workflow — split Review into Critical Review + Revision (5→6 steps), add Europeanized language diagnosis for CJK targets
+
+## 1.47.0 - 2026-03-05
+
+### Features
+- Add `baoyu-translate` skill — three-mode translation (quick/normal/refined) with custom glossaries, audience-aware translation, and parallel chunked translation for long documents
+- Add cross-platform PowerShell support for EXTEND.md preference checks across all skills
+
+## 1.46.0 - 2026-03-05
+
+### Features
+- Add `--output-dir` option to url-to-markdown for custom output directory with auto-generated filenames
+
+## 1.45.1 - 2026-03-05
+
+### Refactor
+- Replace hardcoded `npx -y bun` with `${BUN_X}` runtime variable across all skills — prefers native `bun`, falls back to `npx -y bun`
+- Add Runtime Detection section to CLAUDE.md and Script Directory instructions in all SKILL.md files
+
+## 1.45.0 - 2026-03-05
+
+### Features
+- `baoyu-post-to-x`: add post-composition verification for X Articles — automatically checks remaining placeholders and image count after all images are inserted
+- `baoyu-post-to-x`: increase CDP timeout to 60s and add 3s DOM stabilization delay between image insertions for long articles
+
+## 1.44.0 - 2026-03-05
+
+### Features
+- `baoyu-url-to-markdown`: add `--download-media` flag to download images and videos to local directories, rewriting markdown links to local paths
+- `baoyu-url-to-markdown`: extract cover image from page meta (og:image) into YAML front matter `coverImage` field
+- `baoyu-url-to-markdown`: handle `data-src` lazy loading for WeChat and similar sites
+- `baoyu-url-to-markdown`: add EXTEND.md preferences with first-time setup for media download behavior
+
+## 1.43.2 - 2026-03-05
+
+### Refactor
+- `baoyu-url-to-markdown`: replace custom HTML extraction (linkedom + Readability + Turndown) with defuddle library for cleaner content extraction and markdown conversion
+
+## 1.43.1 - 2026-03-02
+
+### Features
+- `baoyu-post-to-x`: auto-detect WSL environment and resolve Chrome profile to Windows-native path for stable login persistence
+- `baoyu-post-to-wechat`: auto-detect WSL environment and resolve Chrome profile to Windows-native path for stable login persistence
+- `baoyu-danger-gemini-web`: WSL auto-detection for Chrome profile path; add `GEMINI_WEB_DEBUG_PORT` env var for fixed debug port
+- `baoyu-danger-x-to-markdown`: WSL auto-detection for Chrome profile path; add `X_DEBUG_PORT` env var for fixed debug port
+
+## 1.43.0 - 2026-03-02
+
+### Features
+- `baoyu-post-to-wechat`: support env var overrides for browser debug port (`WECHAT_BROWSER_DEBUG_PORT`) and profile directory (`WECHAT_BROWSER_PROFILE_DIR`)
+- `baoyu-post-to-x`: support env var overrides for browser debug port (`X_BROWSER_DEBUG_PORT`) and profile directory (`X_BROWSER_PROFILE_DIR`)
+
+## 1.42.3 - 2026-03-02
+
+### Fixes
+- `baoyu-image-gen`: use standard size presets for DashScope aspect ratio mapping instead of free-form calculation
+
+## 1.42.2 - 2026-03-01
+
+### Features
+- `baoyu-markdown-to-html`: inline rendering pipeline (no subprocess), fix CJK emphasis order, enhance modern theme with GFM alerts and improved typography
+- `baoyu-post-to-wechat`: internalize markdown conversion with modular renderer, add color support, simplify publishing workflow
+
+## 1.42.1 - 2026-02-28
+
+### Features
+- `baoyu-markdown-to-html`: modularize render.ts into cli, constants, extend-config, html-builder, renderer, themes, and types modules; bundle code highlighting themes locally
+
+## 1.42.0 - 2026-02-28
+
+### Features
+- `baoyu-markdown-to-html`: consolidate heritage and warm into single modern theme, add per-theme color defaults (default→blue, grace→purple, simple→green, modern→orange)
+- `baoyu-post-to-wechat`: add default color preference support in EXTEND.md, add modern theme option to first-time setup
+
+## 1.41.0 - 2026-02-28
+
+### Features
+- `baoyu-markdown-to-html`: rename themes (red→heritage, orange→warm), add 13 named color presets, serif-cjk font family, and per-theme style defaults
+
+## 1.40.1 - 2026-02-28
+
+### Features
+- `baoyu-image-gen`: clarify model resolution priority (EXTEND.md overrides env vars) and display current model with switch hints during generation
+
+## 1.40.0 - 2026-02-28
+
+### Features
+- `baoyu-image-gen`: support OpenAI chat completions endpoint for image generation (by @zhao-newname)
+- `baoyu-markdown-to-html`: add CLI customization options (--color, --font-family, --font-size, --code-theme, --mac-code-block, --line-number, --cite, --count, --legend) and EXTEND.md config support
+
+## 1.39.0 - 2026-02-28
+
+### Features
+- `baoyu-markdown-to-html`: add red theme (traditional calligraphy style with red-gold palette and serif typography) and orange theme (warm modern style with rounded corners and relaxed line height)
+
+## 1.38.0 - 2026-02-28
+
+### Features
+- `baoyu-danger-x-to-markdown`: render embedded tweets in articles as blockquotes with author info and text summary
+- `baoyu-danger-x-to-markdown`: reuse existing markdown when `--download-media` targets already-converted URLs
+- `baoyu-danger-x-to-markdown`: upgrade Twitter image downloads to 4096x4096 high resolution
+
+### Fixes
+- `baoyu-danger-x-to-markdown`: improve entity resolution with logical key lookup for reliable media and link mapping
+- `baoyu-danger-x-to-markdown`: support trailing media for all block types (headings, lists, blockquotes)
+
+## 1.37.1 - 2026-02-27
+
+### Fixes
+- `baoyu-danger-gemini-web`: sync model headers with upstream and update model list (by @xkcoding)
+
+## 1.37.0 - 2026-02-27
+
+### Features
+- `baoyu-danger-x-to-markdown`: add inline link rendering for X article content, mapping LINK/MEDIA entities to markdown links
+- `baoyu-danger-x-to-markdown`: use content-based slug in output directory path for meaningful folder names
+- `baoyu-danger-x-to-markdown`: add atomic media queue for blocks without direct media references
+
+## 1.36.0 - 2026-02-27
+
+### Features
+- `baoyu-image-gen`: add `gemini-3.1-flash-image-preview` model support for Google multimodal image generation
+- `baoyu-image-gen`: improve first-time setup with blocking preferences flow and guided configuration
+
+### Fixes
+- `baoyu-image-gen`: use curl fallback for Google API when HTTP proxy is detected (by @liye71023326)
+
+## 1.35.0 - 2026-02-24
+
+### Features
+- `baoyu-image-gen`: add Replicate provider support with configurable models (by @justnode)
+- `baoyu-infographic`: add `dense-modules` layout and 3 new styles (`morandi-journal`, `pop-laboratory`, `retro-pop-grid`) for high-density infographics. Add keyword shortcuts for auto-selection. Prompt credit: [AJ](https://waytoagi.feishu.cn/wiki/YG0zwalijihRREkgmPzcWRInnUg)
+
+### Documentation
+- `baoyu-image-gen`: add Replicate model configuration documentation
+
 ## 1.34.2 - 2026-02-25
 
 ### Documentation
