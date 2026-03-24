@@ -521,14 +521,18 @@ turndown.addRule("collapseFigure", {
 
 turndown.addRule("dropInvisibleAnchors", {
   filter(node) {
-    return node.nodeName === "A" && !(node as Element).textContent?.trim();
+    return (
+      node.nodeName === "A" &&
+      !(node as Element).textContent?.trim() &&
+      !(node as Element).querySelector("img, video, picture, source")
+    );
   },
   replacement() {
     return "";
   },
 });
 
-function convertHtmlToMarkdown(html: string): string {
+export function convertHtmlFragmentToMarkdown(html: string): string {
   if (!html || !html.trim()) return "";
 
   try {
@@ -609,7 +613,7 @@ export function shouldCompareWithLegacy(markdown: string): boolean {
 export function convertWithLegacyExtractor(html: string, baseMetadata: PageMetadata): ConversionResult {
   const extracted = extractFromHtml(html);
 
-  let markdown = extracted?.html ? convertHtmlToMarkdown(extracted.html) : "";
+  let markdown = extracted?.html ? convertHtmlFragmentToMarkdown(extracted.html) : "";
   if (!markdown.trim()) {
     markdown = extracted?.textContent?.trim() || fallbackPlainText(html);
   }

@@ -2,6 +2,40 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.79.1 - 2026-03-23
+
+### Fixes
+- Consolidate to single plugin to prevent duplicate skill registration (by @TyrealQ)
+- `baoyu-article-illustrator`: remove opacity parameter from watermark prompt
+- `baoyu-comic`: fix Doraemon naming spacing and remove opacity from watermark prompt
+- `baoyu-xhs-images`: remove opacity from watermark prompt and fix CJK spacing
+
+### Documentation
+- Update project documentation to reflect single-plugin architecture
+
+## 1.79.0 - 2026-03-22
+
+### Features
+- `baoyu-post-to-wechat`: improve credential loading with multi-source resolution, priority ordering, and diagnostics for skipped incomplete sources
+
+## 1.78.0 - 2026-03-22
+
+### Features
+- `baoyu-url-to-markdown`: add URL-specific parser layer for X/Twitter and archive.ph sites
+- `baoyu-url-to-markdown`: improved slug generation with stop words removal and subdirectory output structure
+
+### Fixes
+- `baoyu-url-to-markdown`: preserve anchor elements containing media in legacy converter
+- `baoyu-url-to-markdown`: smarter title deduplication to avoid redundant headings
+
+## 1.77.0 - 2026-03-22
+
+### Features
+- `baoyu-youtube-transcript`: add end times to chapter data (by @jzOcb)
+
+### Fixes
+- `sync-clawhub`: skip failed skills instead of aborting
+
 ## 1.76.1 - 2026-03-21
 
 ### Documentation

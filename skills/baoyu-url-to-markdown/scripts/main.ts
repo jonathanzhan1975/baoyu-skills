@@ -52,15 +52,71 @@ function parseArgs(argv: string[]): Args {
   return args;
 }
 
-function generateSlug(title: string, url: string): string {
-  const text = title || new URL(url).pathname.replace(/\//g, "-");
-  return text
+const SLUG_STOP_WORDS = new Set([
+  "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+  "have", "has", "had", "do", "does", "did", "will", "would", "shall",
+  "should", "may", "might", "must", "can", "could", "to", "of", "in",
+  "for", "on", "with", "at", "by", "from", "as", "into", "through",
+  "during", "before", "after", "above", "below", "between", "out",
+  "off", "over", "under", "again", "further", "then", "once", "here",
+  "there", "when", "where", "why", "how", "all", "both", "each",
+  "few", "more", "most", "other", "some", "such", "no", "nor", "not",
+  "only", "own", "same", "so", "than", "too", "very", "just", "but",
+  "and", "or", "if", "this", "that", "these", "those", "it", "its",
+  "http", "https", "www", "com", "org", "net", "post", "article",
+]);
+
+function extractSlugFromContent(content: string): string | null {
+  const body = content.replace(/^---\n[\s\S]*?\n---\n?/, "").slice(0, 1000);
+  const words = body
+    .replace(/[^\w\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => /^[a-zA-Z]/.test(w) && w.length >= 2 && !SLUG_STOP_WORDS.has(w.toLowerCase()))
+    .map((w) => w.toLowerCase());
+
+  const unique: string[] = [];
+  const seen = new Set<string>();
+  for (const w of words) {
+    if (!seen.has(w)) {
+      seen.add(w);
+      unique.push(w);
+      if (unique.length >= 6) break;
+    }
+  }
+  return unique.length >= 2 ? unique.join("-").slice(0, 50) : null;
+}
+
+function generateSlug(title: string, url: string, content?: string): string {
+  const asciiWords = title
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => /[a-zA-Z]/.test(w) && w.length >= 2 && !SLUG_STOP_WORDS.has(w.toLowerCase()))
+    .map((w) => w.toLowerCase());
+
+  if (asciiWords.length >= 2) {
+    return asciiWords.slice(0, 6).join("-").slice(0, 50);
+  }
+
+  if (content) {
+    const contentSlug = extractSlugFromContent(content);
+    if (contentSlug) return contentSlug;
+  }
+
+  const GENERIC_PATH_SEGMENTS = new Set(["status", "article", "post", "posts", "p", "blog", "news", "articles"]);
+  const parsed = new URL(url);
+  const pathSlug = parsed.pathname
+    .split("/")
+    .filter((s) => s.length > 0 && !/^\d{10,}$/.test(s) && !GENERIC_PATH_SEGMENTS.has(s.toLowerCase()))
+    .join("-")
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
+    .replace(/[^\w-]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
-    .slice(0, 50) || "page";
+    .slice(0, 40);
+
+  const prefix = asciiWords.slice(0, 2).join("-");
+  const combined = prefix ? `${prefix}-${pathSlug}` : pathSlug;
+  return combined.slice(0, 50) || "page";
 }
 
 function formatTimestamp(): string {
@@ -124,18 +180,18 @@ async function fetchDefuddleApiMarkdown(targetUrl: string): Promise<{ markdown: 
   };
 }
 
-async function generateOutputPath(url: string, title: string, outputDir?: string): Promise<string> {
+async function generateOutputPath(url: string, title: string, outputDir?: string, content?: string): Promise<string> {
   const domain = new URL(url).hostname.replace(/^www\./, "");
-  const slug = generateSlug(title, url);
+  const slug = generateSlug(title, url, content);
   const dataDir = outputDir ? path.resolve(outputDir) : resolveUrlToMarkdownDataDir();
-  const basePath = path.join(dataDir, domain, `${slug}.md`);
+  const basePath = path.join(dataDir, domain, slug, `${slug}.md`);
 
   if (!(await fileExists(basePath))) {
     return basePath;
   }
 
   const timestampSlug = `${slug}-${formatTimestamp()}`;
-  return path.join(dataDir, domain, `${timestampSlug}.md`);
+  return path.join(dataDir, domain, timestampSlug, `${timestampSlug}.md`);
 }
 
 async function waitForUserSignal(): Promise<void> {
@@ -249,13 +305,12 @@ async function main(): Promise<void> {
 
   try {
     const result = await captureUrl(args);
-    outputPath = args.output || await generateOutputPath(args.url, result.metadata.title, args.outputDir);
+    document = createMarkdownDocument(result);
+    outputPath = args.output || await generateOutputPath(args.url, result.metadata.title, args.outputDir, document);
     const outputDir = path.dirname(outputPath);
     htmlSnapshotPath = deriveHtmlSnapshotPath(outputPath);
     await mkdir(outputDir, { recursive: true });
     await writeFile(htmlSnapshotPath, result.rawHtml, "utf-8");
-
-    document = createMarkdownDocument(result);
     conversionMethod = result.conversionMethod;
     fallbackReason = result.fallbackReason;
   } catch (error) {
@@ -265,10 +320,9 @@ async function main(): Promise<void> {
 
     try {
       const remoteResult = await fetchDefuddleApiMarkdown(args.url);
-      outputPath = args.output || await generateOutputPath(args.url, remoteResult.title, args.outputDir);
-      await mkdir(path.dirname(outputPath), { recursive: true });
-
       document = remoteResult.markdown;
+      outputPath = args.output || await generateOutputPath(args.url, remoteResult.title, args.outputDir, document);
+      await mkdir(path.dirname(outputPath), { recursive: true });
       conversionMethod = "defuddle-api";
       fallbackReason = `Local browser capture failed: ${primaryError}`;
     } catch (remoteError) {

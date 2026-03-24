@@ -12,6 +12,7 @@ import {
   scoreMarkdownQuality,
   shouldCompareWithLegacy,
 } from "./legacy-converter.js";
+import { tryUrlRuleParsers } from "./parsers/index.js";
 
 export type { ConversionResult, PageMetadata };
 export { createMarkdownDocument, formatMetadataYaml };
@@ -104,6 +105,11 @@ function shouldPreferDefuddle(result: ConversionResult): boolean {
 export async function extractContent(html: string, url: string): Promise<ConversionResult> {
   const capturedAt = new Date().toISOString();
   const baseMetadata = extractMetadataFromHtml(html, url, capturedAt);
+
+  const specializedResult = tryUrlRuleParsers(html, url, baseMetadata);
+  if (specializedResult) {
+    return specializedResult;
+  }
 
   const defuddleResult = await tryDefuddleConversion(html, url, baseMetadata);
   if (defuddleResult.ok) {

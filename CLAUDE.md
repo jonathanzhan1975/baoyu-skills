@@ -1,16 +1,16 @@
 # CLAUDE.md
 
-Claude Code marketplace plugin providing AI-powered content generation skills. Version: **1.76.0**.
+Claude Code marketplace plugin providing AI-powered content generation skills. Version: **1.79.1**.
 
 ## Architecture
 
-Skills organized into three categories in `.claude-plugin/marketplace.json` (defines plugin metadata, version, and skill paths):
+Skills are exposed through the single `baoyu-skills` plugin in `.claude-plugin/marketplace.json` (which defines plugin metadata, version, and skill paths). The repo docs still group them into three logical areas:
 
-| Category | Description |
-|----------|-------------|
-| `content-skills` | Generate or publish content (images, slides, comics, posts) |
-| `ai-generation-skills` | AI generation backends |
-| `utility-skills` | Content processing (conversion, compression, translation) |
+| Group | Description |
+|-------|-------------|
+| Content Skills | Generate or publish content (images, slides, comics, posts) |
+| AI Generation Skills | AI generation backends |
+| Utility Skills | Content processing (conversion, compression, translation) |
 
 Each skill contains `SKILL.md` (YAML front matter + docs), optional `scripts/`, `references/`, `prompts/`.
 

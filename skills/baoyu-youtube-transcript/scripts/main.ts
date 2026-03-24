@@ -44,6 +44,7 @@ interface TranscriptInfo {
 interface Chapter {
   title: string;
   start: number;
+  end: number;
 }
 
 interface VideoMeta {
@@ -249,16 +250,21 @@ async function fetchTranscriptSnippets(info: TranscriptInfo, translateTo?: strin
 
 // --- Metadata & chapters ---
 
-function parseChapters(description: string): Chapter[] {
-  const chapters: Chapter[] = [];
+function parseChapters(description: string, duration: number = 0): Chapter[] {
+  const raw: { title: string; start: number }[] = [];
   for (const line of description.split("\n")) {
     const m = line.trim().match(/^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\s+(.+)$/);
     if (m) {
       const h = m[1] ? parseInt(m[1]) : 0;
-      chapters.push({ title: m[4].trim(), start: h * 3600 + parseInt(m[2]) * 60 + parseInt(m[3]) });
+      raw.push({ title: m[4].trim(), start: h * 3600 + parseInt(m[2]) * 60 + parseInt(m[3]) });
     }
   }
-  return chapters.length >= 2 ? chapters : [];
+  if (raw.length < 2) return [];
+  return raw.map((ch, i) => ({
+    title: ch.title,
+    start: ch.start,
+    end: i < raw.length - 1 ? raw[i + 1].start : Math.max(duration, ch.start),
+  }));
 }
 
 function getThumbnailUrls(videoId: string, data: any): string[] {
@@ -644,7 +650,8 @@ async function fetchAndCache(videoId: string, baseDir: string, opts: Options): P
   const info = findTranscript(transcripts, opts.languages, opts.excludeGenerated, opts.excludeManual);
   const result = await fetchTranscriptSnippets(info, opts.translate || undefined);
   const description = data?.videoDetails?.shortDescription || "";
-  const chapters = parseChapters(description);
+  const duration = parseInt(data?.videoDetails?.lengthSeconds || "0");
+  const chapters = parseChapters(description, duration);
   const langInfo = { code: result.languageCode, name: result.language, isGenerated: info.isGenerated };
   const meta = buildVideoMeta(data, videoId, langInfo, chapters);
 
@@ -692,6 +699,15 @@ async function processVideo(videoId: string, opts: Options): Promise<VideoResult
     sentences = loadSentences(videoDir);
     const wantLangs = opts.translate ? [opts.translate] : opts.languages;
     if (!wantLangs.includes(meta.language.code)) needsFetch = true;
+    // Backfill chapter end times for caches created before this field existed
+    if (!needsFetch && meta.chapters.length > 0 && meta.chapters.some((ch: any) => ch.end === undefined)) {
+      for (let i = 0; i < meta.chapters.length; i++) {
+        meta.chapters[i].end = i < meta.chapters.length - 1
+          ? meta.chapters[i + 1].start
+          : Math.max(meta.duration, meta.chapters[i].start);
+      }
+      try { writeFileSync(join(videoDir, "meta.json"), JSON.stringify(meta, null, 2)); } catch {}
+    }
   }
 
   if (needsFetch) {

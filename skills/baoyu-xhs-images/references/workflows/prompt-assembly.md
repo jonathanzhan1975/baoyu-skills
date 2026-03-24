@@ -151,8 +151,7 @@ From outline entry:
 ```markdown
 ## Watermark
 
-Include a subtle watermark "{content}" positioned at {position}
-with approximately {opacity*100}% visibility. The watermark should
+Include a subtle watermark "{content}" positioned at {position}. The watermark should
 be legible but not distracting from the main content.
 ```
 
@@ -295,19 +294,19 @@ Create a Xiaohongshu (Little Red Book) style infographic following these guideli
 ## Content
 
 **Position**: Content (Page 3 of 6)
-**Core Message**: ChatGPT使用技巧
+**Core Message**: ChatGPT 使用技巧
 
 **Text Content**:
 - Title: 「ChatGPT」
-- Subtitle: 最强AI助手
+- Subtitle: 最强 AI 助手
 - Points:
   - 写文案：给出框架，秒出初稿
   - 改文章：润色、翻译、总结
-  - 编程：写代码、找bug
+  - 编程：写代码、找 bug
   - 学习：解释概念、出题练习
 
 **Visual Concept**:
-ChatGPT logo居中，四周放射状展示功能点
+ChatGPT logo 居中，四周放射状展示功能点
 深色科技背景，霓虹绿点缀
 
 ---

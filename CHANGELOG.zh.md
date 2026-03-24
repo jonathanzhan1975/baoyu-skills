@@ -2,6 +2,40 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.79.1 - 2026-03-23
+
+### 修复
+- 合并为单一插件，防止 skill 重复注册 (by @TyrealQ)
+- `baoyu-article-illustrator`：移除水印提示词中的不透明度参数
+- `baoyu-comic`：修正哆啦 A 梦命名间距，移除水印不透明度参数
+- `baoyu-xhs-images`：移除水印不透明度参数，修正中英文间距
+
+### 文档
+- 更新项目文档以反映单一插件架构
+
+## 1.79.0 - 2026-03-22
+
+### 新功能
+- `baoyu-post-to-wechat`：改进凭据加载机制，支持多来源优先级解析，并提供不完整凭据来源的诊断信息
+
+## 1.78.0 - 2026-03-22
+
+### 新功能
+- `baoyu-url-to-markdown`：新增 URL 专用解析层，支持 X/Twitter 和 archive.ph 站点的定制化 HTML 提取
+- `baoyu-url-to-markdown`：改进 slug 生成算法，去除停用词并采用子目录输出结构
+
+### 修复
+- `baoyu-url-to-markdown`：旧版转换器保留包含媒体元素的锚标签
+- `baoyu-url-to-markdown`：更智能的标题去重，避免重复添加标题
+
+## 1.77.0 - 2026-03-22
+
+### 新功能
+- `baoyu-youtube-transcript`：为章节数据添加结束时间 (by @jzOcb)
+
+### 修复
+- `sync-clawhub`：跳过失败的技能而不是中止同步
+
 ## 1.76.1 - 2026-03-21
 
 ### 文档
