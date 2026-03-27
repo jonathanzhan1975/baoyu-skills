@@ -2,6 +2,85 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.87.2 - 2026-03-26
+
+### Refactor
+- `baoyu-translate`: simplify translation prompts from 15+ verbose principles to 7 concise ones, consolidate analysis and review steps in workflow references
+
+## 1.87.1 - 2026-03-26
+
+### Maintenance
+- Add deprecation notice to `baoyu-image-gen` SKILL.md redirecting users to `baoyu-imagine`
+- Document deprecated skills policy in CLAUDE.md
+
+## 1.87.0 - 2026-03-26
+
+### Maintenance
+- Remove deprecated `baoyu-image-gen` redirect skill and plugin manifest entry — migration to `baoyu-imagine` is complete
+
+## 1.86.0 - 2026-03-25
+
+### Features
+- `baoyu-translate`: enrich translation prompt with full analysis context — source voice assessment, structured figurative language mapping, comprehension challenge reasoning, structural/creative challenges, and chunk position context for subagents
+
+## 1.85.0 - 2026-03-25
+
+### Features
+- `baoyu-imagine`: auto-migrate legacy `baoyu-image-gen` EXTEND.md config path at runtime
+- Add `baoyu-image-gen` deprecation redirect skill to guide users to install `baoyu-imagine` and remove the old skill
+
+## 1.84.0 - 2026-03-25
+
+### Features
+- Rename `baoyu-image-gen` skill to `baoyu-imagine` — shorter command name, all references updated across docs, configs, and dependent skills
+
+## 1.83.0 - 2026-03-25
+
+### Features
+- `baoyu-image-gen`: add MiniMax provider (`image-01` / `image-01-live`) with subject_reference for character/portrait consistency, custom sizes, and aspect ratio support
+
+## 1.82.0 - 2026-03-24
+
+### Features
+- `baoyu-url-to-markdown`: add browser fallback strategy — headless first, automatic retry in visible Chrome on technical failure; new `--browser auto|headless|headed` flag with `--headless`/`--headed` shortcuts
+- `baoyu-url-to-markdown`: add content cleaner module for HTML preprocessing before extraction (remove ads, base64 images, scripts, styles)
+- `baoyu-url-to-markdown`: support base64 data URI images in media localizer alongside remote URLs
+- `baoyu-url-to-markdown`: capture final URL from browser to track redirects for output path generation
+- `baoyu-url-to-markdown`: add agent quality gate documentation for post-capture content validation
+
+### Dependencies
+- `baoyu-url-to-markdown`: upgrade defuddle ^0.12.0 → ^0.14.0
+
+### Tests
+- `baoyu-url-to-markdown`: add unit tests for content-cleaner, html-to-markdown, legacy-converter, media-localizer
+
+## 1.81.0 - 2026-03-24
+
+### Features
+- `baoyu-youtube-transcript`: add yt-dlp fallback when YouTube blocks direct InnerTube API, with alternate client identity retry and cookie support via `YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER` env var
+
+### Refactor
+- `baoyu-youtube-transcript`: split monolithic script into typed modules (youtube, transcript, storage, shared, types) and add unit tests
+
+## 1.80.1 - 2026-03-24
+
+### Fixes
+- `baoyu-image-gen`: use correct `prompt` field name for Jimeng API request
+
+## 1.80.0 - 2026-03-24
+
+### Features
+- `baoyu-image-gen`: add Azure OpenAI as independent image generation provider with flexible endpoint parsing, deployment-name resolution, quality mapping, and reference image validation
+
+## 1.79.2 - 2026-03-23
+
+### Fixes
+- `baoyu-cover-image`: simplify reference image handling — use `--ref` when model supports it, only create description files for models without reference image support
+- `baoyu-post-to-weibo`: add no-theme rule for article markdown-to-HTML conversion
+
+### Tests
+- Fix Node-compatible parser tests and add parser test dependencies
+
 ## 1.79.1 - 2026-03-23
 
 ### Fixes

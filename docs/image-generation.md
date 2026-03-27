@@ -4,7 +4,7 @@ Skills that require image generation MUST delegate to available image generation
 
 ## Skill Selection
 
-**Default**: `skills/baoyu-image-gen/SKILL.md` (unless user specifies otherwise).
+**Default**: `skills/baoyu-imagine/SKILL.md` (unless user specifies otherwise).
 
 1. Read skill's SKILL.md for parameters and capabilities
 2. If user requests different skill, check `skills/` for alternatives
@@ -16,7 +16,7 @@ Skills that require image generation MUST delegate to available image generation
 ### Step N: Generate Images
 
 **Skill Selection**:
-1. Check available skills (`baoyu-image-gen` default, or `baoyu-danger-gemini-web`)
+1. Check available skills (`baoyu-imagine` default, or `baoyu-danger-gemini-web`)
 2. Read selected skill's SKILL.md for parameters
 3. If multiple skills available, ask user to choose
 
@@ -27,7 +27,7 @@ Skills that require image generation MUST delegate to available image generation
 4. On failure, auto-retry once before reporting error
 ```
 
-**Batch Parallel** (`baoyu-image-gen` only): concurrent workers with per-provider throttling via `batch.max_workers` in EXTEND.md.
+**Batch Parallel** (`baoyu-imagine` only): concurrent workers with per-provider throttling via `batch.max_workers` in EXTEND.md.
 
 ## Output Path Convention
 

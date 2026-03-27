@@ -32,7 +32,7 @@ This repository now supports publishing each `skills/baoyu-*` directory as an in
 ClawHub installs skills individually, not as one marketplace bundle. After publishing, users can install specific skills such as:
 
 ```bash
-clawhub install baoyu-image-gen
+clawhub install baoyu-imagine
 clawhub install baoyu-markdown-to-html
 ```
 
@@ -661,40 +661,58 @@ Post content to Weibo (微博). Supports regular posts with text, images, and vi
 
 AI-powered generation backends.
 
-#### baoyu-image-gen
+#### baoyu-imagine
 
-AI SDK-based image generation using OpenAI, Google, OpenRouter, DashScope (Aliyun Tongyi Wanxiang), Jimeng (即梦), Seedream (豆包), and Replicate APIs. Supports text-to-image, reference images, aspect ratios, and quality presets.
+AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, DashScope (Aliyun Tongyi Wanxiang), MiniMax, Jimeng (即梦), Seedream (豆包), and Replicate APIs. Supports text-to-image, reference images, aspect ratios, custom sizes, batch generation, and quality presets.
 
 ```bash
 # Basic generation (auto-detect provider)
-/baoyu-image-gen --prompt "A cute cat" --image cat.png
+/baoyu-imagine --prompt "A cute cat" --image cat.png
 
 # With aspect ratio
-/baoyu-image-gen --prompt "A landscape" --image landscape.png --ar 16:9
+/baoyu-imagine --prompt "A landscape" --image landscape.png --ar 16:9
 
 # High quality (2k)
-/baoyu-image-gen --prompt "A banner" --image banner.png --quality 2k
+/baoyu-imagine --prompt "A banner" --image banner.png --quality 2k
 
 # Specific provider
-/baoyu-image-gen --prompt "A cat" --image cat.png --provider openai
+/baoyu-imagine --prompt "A cat" --image cat.png --provider openai
+
+# Azure OpenAI (model = deployment name)
+/baoyu-imagine --prompt "A cat" --image cat.png --provider azure --model gpt-image-1.5
 
 # OpenRouter
-/baoyu-image-gen --prompt "A cat" --image cat.png --provider openrouter
+/baoyu-imagine --prompt "A cat" --image cat.png --provider openrouter
+
+# OpenRouter with reference images
+/baoyu-imagine --prompt "Make it blue" --image out.png --provider openrouter --model google/gemini-3.1-flash-image-preview --ref source.png
 
 # DashScope (Aliyun Tongyi Wanxiang)
-/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider dashscope
+/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider dashscope
+
+# DashScope with custom size
+/baoyu-imagine --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
+
+# MiniMax
+/baoyu-imagine --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
+
+# MiniMax with subject reference
+/baoyu-imagine --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
 
 # Replicate
-/baoyu-image-gen --prompt "A cat" --image cat.png --provider replicate
+/baoyu-imagine --prompt "A cat" --image cat.png --provider replicate
 
 # Jimeng (即梦)
-/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider jimeng
+/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider jimeng
 
 # Seedream (豆包)
-/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider seedream
+/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider seedream
 
-# With reference images (Google, OpenAI, OpenRouter, Replicate, or Seedream 5.0/4.5/4.0)
-/baoyu-image-gen --prompt "Make it blue" --image out.png --ref source.png
+# With reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 5.0/4.5/4.0)
+/baoyu-imagine --prompt "Make it blue" --image out.png --ref source.png
+
+# Batch mode
+/baoyu-imagine --batchfile batch.json --jobs 4 --json
 ```
 
 **Options**:
@@ -703,44 +721,73 @@ AI SDK-based image generation using OpenAI, Google, OpenRouter, DashScope (Aliyu
 | `--prompt`, `-p` | Prompt text |
 | `--promptfiles` | Read prompt from files (concatenated) |
 | `--image` | Output image path (required) |
-| `--provider` | `google`, `openai`, `openrouter`, `dashscope`, `jimeng`, `seedream` or `replicate` (default: auto-detect; prefers google) |
-| `--model`, `-m` | Model ID |
+| `--batchfile` | JSON batch file for multi-image generation |
+| `--jobs` | Worker count for batch mode |
+| `--provider` | `google`, `openai`, `azure`, `openrouter`, `dashscope`, `minimax`, `jimeng`, `seedream`, or `replicate` |
+| `--model`, `-m` | Model ID or deployment name. Azure uses deployment name; OpenRouter uses full model IDs; MiniMax uses `image-01` / `image-01-live` |
 | `--ar` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size` | Size (e.g., `1024x1024`) |
 | `--quality` | `normal` or `2k` (default: `2k`) |
-| `--ref` | Reference images (Google, OpenAI, OpenRouter, Replicate, or Seedream 5.0/4.5/4.0) |
+| `--imageSize` | `1K`, `2K`, or `4K` for Google/OpenRouter |
+| `--ref` | Reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 5.0/4.5/4.0) |
+| `--n` | Number of images per request |
+| `--json` | JSON output |
 
 **Environment Variables** (see [Environment Configuration](#environment-configuration) for setup):
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENAI_API_KEY` | OpenAI API key | - |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI API key | - |
 | `OPENROUTER_API_KEY` | OpenRouter API key | - |
 | `GOOGLE_API_KEY` | Google API key | - |
+| `GEMINI_API_KEY` | Alias for `GOOGLE_API_KEY` | - |
 | `DASHSCOPE_API_KEY` | DashScope API key (Aliyun) | - |
+| `MINIMAX_API_KEY` | MiniMax API key | - |
 | `REPLICATE_API_TOKEN` | Replicate API token | - |
 | `JIMENG_ACCESS_KEY_ID` | Jimeng Volcengine access key | - |
 | `JIMENG_SECRET_ACCESS_KEY` | Jimeng Volcengine secret key | - |
 | `ARK_API_KEY` | Seedream Volcengine ARK API key | - |
 | `OPENAI_IMAGE_MODEL` | OpenAI model | `gpt-image-1.5` |
+| `AZURE_OPENAI_DEPLOYMENT` | Azure default deployment name | - |
+| `AZURE_OPENAI_IMAGE_MODEL` | Backward-compatible Azure deployment/model alias | `gpt-image-1.5` |
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter model | `google/gemini-3.1-flash-image-preview` |
 | `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
+| `MINIMAX_IMAGE_MODEL` | MiniMax model | `image-01` |
 | `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-pro` |
 | `JIMENG_IMAGE_MODEL` | Jimeng model | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | Seedream model | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint | - |
+| `OPENAI_IMAGE_USE_CHAT` | Use `/chat/completions` for OpenAI image generation | `false` |
+| `AZURE_OPENAI_BASE_URL` | Azure resource or deployment endpoint | - |
+| `AZURE_API_VERSION` | Azure image API version | `2025-04-01-preview` |
 | `OPENROUTER_BASE_URL` | Custom OpenRouter endpoint | `https://openrouter.ai/api/v1` |
+| `OPENROUTER_HTTP_REFERER` | Optional app/site URL for OpenRouter attribution | - |
+| `OPENROUTER_TITLE` | Optional app name for OpenRouter attribution | - |
 | `GOOGLE_BASE_URL` | Custom Google endpoint | - |
 | `DASHSCOPE_BASE_URL` | Custom DashScope endpoint | - |
+| `MINIMAX_BASE_URL` | Custom MiniMax endpoint | `https://api.minimax.io` |
 | `REPLICATE_BASE_URL` | Custom Replicate endpoint | - |
 | `JIMENG_BASE_URL` | Custom Jimeng endpoint | `https://visual.volcengineapi.com` |
 | `JIMENG_REGION` | Jimeng region | `cn-north-1` |
 | `SEEDREAM_BASE_URL` | Custom Seedream endpoint | `https://ark.cn-beijing.volces.com/api/v3` |
+| `BAOYU_IMAGE_GEN_MAX_WORKERS` | Override batch worker cap | `10` |
+| `BAOYU_IMAGE_GEN_<PROVIDER>_CONCURRENCY` | Override provider concurrency | provider-specific |
+| `BAOYU_IMAGE_GEN_<PROVIDER>_START_INTERVAL_MS` | Override provider request start gap | provider-specific |
+
+**Provider Notes**:
+- Azure OpenAI: `--model` means Azure deployment name, not the underlying model family.
+- DashScope: `qwen-image-2.0-pro` is the recommended default for custom `--size`, `21:9`, and strong Chinese/English text rendering.
+- MiniMax: `image-01` supports documented custom `width` / `height`; `image-01-live` is lower latency and works best with `--ar`.
+- MiniMax reference images are sent as `subject_reference`; the current API is specialized toward character / portrait consistency.
+- Jimeng does not support reference images.
+- Seedream reference images are supported by Seedream 5.0 / 4.5 / 4.0, not Seedream 3.0.
 
 **Provider Auto-Selection**:
-1. If `--provider` specified → use it
-2. If only one API key available → use that provider
-3. If multiple available → default to Google
+1. If `--provider` is specified → use it
+2. If `--ref` is provided and no provider is specified → try Google, then OpenAI, Azure, OpenRouter, Replicate, Seedream, and finally MiniMax
+3. If only one API key is available → use that provider
+4. If multiple providers are available → default to Google
 
 #### baoyu-danger-gemini-web
 
@@ -998,7 +1045,7 @@ Custom style descriptions are also accepted, e.g., `--style "poetic and lyrical"
 Some skills require API keys or custom configuration. Environment variables can be set in `.env` files:
 
 **Load Priority** (higher priority overrides lower):
-1. CLI environment variables (e.g., `OPENAI_API_KEY=xxx /baoyu-image-gen ...`)
+1. CLI environment variables (e.g., `OPENAI_API_KEY=xxx /baoyu-imagine ...`)
 2. `process.env` (system environment)
 3. `<cwd>/.baoyu-skills/.env` (project-level)
 4. `~/.baoyu-skills/.env` (user-level)
@@ -1015,11 +1062,20 @@ cat > ~/.baoyu-skills/.env << 'EOF'
 OPENAI_API_KEY=sk-xxx
 OPENAI_IMAGE_MODEL=gpt-image-1.5
 # OPENAI_BASE_URL=https://api.openai.com/v1
+# OPENAI_IMAGE_USE_CHAT=false
+
+# Azure OpenAI
+AZURE_OPENAI_API_KEY=xxx
+AZURE_OPENAI_BASE_URL=https://your-resource.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT=gpt-image-1.5
+# AZURE_API_VERSION=2025-04-01-preview
 
 # OpenRouter
 OPENROUTER_API_KEY=sk-or-xxx
 OPENROUTER_IMAGE_MODEL=google/gemini-3.1-flash-image-preview
 # OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+# OPENROUTER_HTTP_REFERER=https://your-app.example.com
+# OPENROUTER_TITLE=Your App Name
 
 # Google
 GOOGLE_API_KEY=xxx
@@ -1030,6 +1086,11 @@ GOOGLE_IMAGE_MODEL=gemini-3-pro-image-preview
 DASHSCOPE_API_KEY=sk-xxx
 DASHSCOPE_IMAGE_MODEL=qwen-image-2.0-pro
 # DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
+
+# MiniMax
+MINIMAX_API_KEY=xxx
+MINIMAX_IMAGE_MODEL=image-01
+# MINIMAX_BASE_URL=https://api.minimax.io
 
 # Replicate
 REPLICATE_API_TOKEN=r8_xxx

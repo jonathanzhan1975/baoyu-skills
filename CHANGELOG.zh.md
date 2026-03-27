@@ -2,6 +2,85 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.87.2 - 2026-03-26
+
+### 重构
+- `baoyu-translate`：精简翻译提示词，将 15+ 条冗长原则压缩为 7 条，合并分析和审校步骤
+
+## 1.87.1 - 2026-03-26
+
+### 维护
+- 在 `baoyu-image-gen` SKILL.md 中添加废弃提示，引导用户使用 `baoyu-imagine`
+- 在 CLAUDE.md 中记录废弃技能策略
+
+## 1.87.0 - 2026-03-26
+
+### 维护
+- 移除已废弃的 `baoyu-image-gen` 重定向技能及插件清单条目 — 向 `baoyu-imagine` 的迁移已完成
+
+## 1.86.0 - 2026-03-25
+
+### 新功能
+- `baoyu-translate`：丰富翻译提示词的分析上下文 — 加入原文语气评估、结构化比喻映射表、理解难点推理、结构性/创造性翻译挑战，以及分块翻译的位置上下文
+
+## 1.85.0 - 2026-03-25
+
+### 新功能
+- `baoyu-imagine`：运行时自动迁移旧版 `baoyu-image-gen` 的 EXTEND.md 配置路径
+- 新增 `baoyu-image-gen` 废弃重定向技能，引导用户安装 `baoyu-imagine` 并移除旧技能
+
+## 1.84.0 - 2026-03-25
+
+### 新功能
+- 将 `baoyu-image-gen` 技能重命名为 `baoyu-imagine` — 更简短的命令名，所有文档、配置和依赖技能中的引用已同步更新
+
+## 1.83.0 - 2026-03-25
+
+### 新功能
+- `baoyu-image-gen`：新增 MiniMax 服务商（`image-01` / `image-01-live`），支持 subject_reference 角色/肖像一致性、自定义尺寸和宽高比
+
+## 1.82.0 - 2026-03-24
+
+### 新功能
+- `baoyu-url-to-markdown`：新增浏览器回退策略 — 默认无头模式优先，技术故障时自动重试有头 Chrome；新增 `--browser auto|headless|headed` 参数及 `--headless`/`--headed` 快捷方式
+- `baoyu-url-to-markdown`：新增内容清理模块，提取前预处理 HTML（移除广告、base64 图片、脚本、样式）
+- `baoyu-url-to-markdown`：媒体本地化支持 base64 data URI 图片
+- `baoyu-url-to-markdown`：从浏览器捕获最终 URL 以跟踪重定向，用于输出路径生成
+- `baoyu-url-to-markdown`：新增 Agent 质量门控文档，规范捕获后的内容验证流程
+
+### 依赖
+- `baoyu-url-to-markdown`：升级 defuddle ^0.12.0 → ^0.14.0
+
+### 测试
+- `baoyu-url-to-markdown`：新增 content-cleaner、html-to-markdown、legacy-converter、media-localizer 单元测试
+
+## 1.81.0 - 2026-03-24
+
+### 新功能
+- `baoyu-youtube-transcript`：YouTube 封锁直连 InnerTube API 时自动回退到 yt-dlp，支持备用客户端身份重试及通过 `YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER` 环境变量传递浏览器 Cookie
+
+### 重构
+- `baoyu-youtube-transcript`：将单体脚本拆分为类型化模块（youtube、transcript、storage、shared、types）并添加单元测试
+
+## 1.80.1 - 2026-03-24
+
+### 修复
+- `baoyu-image-gen`：修正即梦 API 请求中的 `prompt` 字段名
+
+## 1.80.0 - 2026-03-24
+
+### 新功能
+- `baoyu-image-gen`：新增 Azure OpenAI 作为独立图像生成服务商，支持灵活的端点解析、部署名称推断、质量映射及参考图片格式校验
+
+## 1.79.2 - 2026-03-23
+
+### 修复
+- `baoyu-cover-image`：简化参考图片处理流程 — 模型支持 `--ref` 时直接传递，仅在模型不支持参考图时创建描述文件
+- `baoyu-post-to-weibo`：文章 Markdown 转 HTML 时不传递 --theme 参数
+
+### 测试
+- 修复 Node 兼容的解析器测试，添加解析器测试依赖
+
 ## 1.79.1 - 2026-03-23
 
 ### 修复
