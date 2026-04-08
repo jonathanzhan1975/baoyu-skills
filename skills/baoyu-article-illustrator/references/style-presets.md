@@ -23,6 +23,7 @@
 | `process-flow` | `flowchart` | `notion` | — | Workflow documentation, onboarding flows |
 | `warm-knowledge` | `infographic` | `vector-illustration` | `warm` | Product showcases, team intros, feature cards, brand content |
 | `edu-visual` | `infographic` | `vector-illustration` | `macaron` | Knowledge summaries, concept explainers, educational articles |
+| `hand-drawn-edu` | `flowchart` | `sketch-notes` | `macaron` | Hand-drawn educational diagrams, process explainers, onboarding visuals |
 
 ### Data & Analysis
 
@@ -65,7 +66,7 @@ Use this table during Step 3 to recommend presets based on Step 2 content analys
 | Historical / Timeline | `history` | `evolution` |
 | Academic / Research | `science-paper` | `tech-explainer`, `data-report` |
 | SaaS / Product | `saas-guide` | `knowledge-base`, `process-flow`, `warm-knowledge` |
-| Education / Knowledge | `edu-visual` | `knowledge-base`, `tutorial` |
+| Education / Knowledge | `edu-visual` | `knowledge-base`, `tutorial`, `hand-drawn-edu` |
 
 ## Override Examples
 

@@ -182,6 +182,17 @@ COLORS: Cream background (#F5F0E6), steps in Coral/Mint/Mustard, black outlines
 ELEMENTS: Rounded rectangles, thick arrows, simple icons per step
 ```
 
+**Flowchart + sketch-notes + macaron palette**:
+```
+Hand-drawn educational flowchart on warm cream paper. Slight wobble on all lines.
+PALETTE: macaron — soft pastel color blocks
+COLORS: Warm Cream background (#F5F0E8), zone fills in Macaron Blue (#A8D8EA),
+        Lavender (#D5C6E0), Mint (#B5E5CF), Coral Red (#E8655A) for emphasis
+ELEMENTS: Rounded cards with dashed/solid borders, wavy hand-drawn arrows with labels,
+          simple stick-figure characters, doodle decorations (stars, underlines)
+STYLE: Color fills don't completely fill outlines, hand-drawn lettering, generous white space
+```
+
 ### Comparison
 
 ```
