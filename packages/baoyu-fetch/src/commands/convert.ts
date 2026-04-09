@@ -7,6 +7,7 @@ import { detectInteractionGate } from "../browser/interaction-gates";
 import { NetworkJournal } from "../browser/network-journal";
 import { BrowserSession } from "../browser/session";
 import { genericAdapter, resolveAdapter } from "../adapters";
+import { isXSessionReady } from "../adapters/x/session";
 import type { ExtractedDocument } from "../extract/document";
 import { renderMarkdown } from "../extract/markdown-renderer";
 import { downloadMediaAssets } from "../media/default-downloader";
@@ -55,6 +56,7 @@ interface ForceWaitSnapshot {
   url: string;
   hasGate: boolean;
   loginState: LoginState | "unavailable";
+  sessionReady: boolean;
 }
 
 interface SuccessfulConvertOutput {
@@ -78,6 +80,17 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isForceWaitSessionReady(snapshot: ForceWaitSnapshot): boolean {
+  return snapshot.sessionReady;
+}
+
+export function shouldKeepBrowserOpenAfterInteraction(options: {
+  launched: boolean;
+  interaction: Pick<WaitForInteractionRequest, "kind" | "provider">;
+}): boolean {
+  return options.launched && options.interaction.kind === "login" && options.interaction.provider === "x";
+}
+
 export function shouldAutoContinueForceWait(
   initial: ForceWaitSnapshot,
   current: ForceWaitSnapshot,
@@ -86,15 +99,20 @@ export function shouldAutoContinueForceWait(
     return true;
   }
 
-  if (initial.loginState === "logged_out" && current.loginState !== "logged_out") {
+  if (initial.loginState === "logged_out" && current.loginState !== "logged_out" && isForceWaitSessionReady(current)) {
     return true;
   }
 
-  if (initial.loginState !== "logged_in" && current.loginState === "logged_in") {
+  if (initial.loginState !== "logged_in" && current.loginState === "logged_in" && isForceWaitSessionReady(current)) {
     return true;
   }
 
-  if (current.url !== initial.url && !current.hasGate && current.loginState !== "logged_out") {
+  if (
+    current.url !== initial.url &&
+    !current.hasGate &&
+    current.loginState !== "logged_out" &&
+    isForceWaitSessionReady(current)
+  ) {
     return true;
   }
 
@@ -173,6 +191,16 @@ async function closeRuntime(runtime: RuntimeResources | null | undefined): Promi
   await runtime.chrome.close().catch(() => {});
 }
 
+async function isInteractionSessionReady(
+  context: AdapterContext,
+  interaction: WaitForInteractionRequest,
+): Promise<boolean> {
+  if (interaction.provider !== "x") {
+    return true;
+  }
+  return await isXSessionReady(context).catch(() => false);
+}
+
 async function reopenInteractiveRuntime(
   runtime: RuntimeResources,
   options: ConvertCommandOptions,
@@ -203,6 +231,7 @@ async function captureForceWaitSnapshot(
     url,
     hasGate: Boolean(gate),
     loginState: login?.state ?? "unavailable",
+    sessionReady: adapter.name === "x" ? await isXSessionReady(context).catch(() => false) : true,
   };
 }
 
@@ -280,7 +309,7 @@ async function waitForInteraction(
   while (Date.now() - startedAt < timeoutMs) {
     if (interaction.kind === "login" && adapter.checkLogin) {
       lastLogin = await adapter.checkLogin(context);
-      if (lastLogin.state === "logged_in") {
+      if (lastLogin.state === "logged_in" && await isInteractionSessionReady(context, interaction)) {
         return lastLogin;
       }
     }
@@ -303,7 +332,7 @@ async function waitForInteraction(
       }
 
       lastLogin = await adapter.checkLogin(context);
-      if (lastLogin.state !== "logged_out") {
+      if (lastLogin.state !== "logged_out" && await isInteractionSessionReady(context, interaction)) {
         return lastLogin;
       }
     }
@@ -347,10 +376,13 @@ export async function runConvertCommand(options: ConvertCommandOptions): Promise
   const url = normalizeUrl(options.url);
   let runtime = await openRuntime(options, options.waitMode !== "none", Boolean(options.debugDir));
   const logger = createLogger(Boolean(options.debugDir));
+  let didLogin = false;
+  let adapter: Adapter | null = null;
+  let context: AdapterContext | null = null;
 
   try {
-    const adapter = resolveAdapter({ url }, options.adapter);
-    let context: AdapterContext = {
+    adapter = resolveAdapter({ url }, options.adapter);
+    context = {
       input: { url },
       browser: runtime.browser,
       network: runtime.network,
@@ -361,6 +393,27 @@ export async function runConvertCommand(options: ConvertCommandOptions): Promise
       interactive: runtime.interactive,
       downloadMedia: options.downloadMedia,
     };
+
+    if (adapter.restoreCookies) {
+      const restored = await adapter.restoreCookies(context, runtime.chrome.profileDir).catch(() => false);
+      if (restored) logger.info(`Restored ${adapter.name} session cookies from sidecar.`);
+    }
+
+    if (options.waitMode === "interaction" && adapter.checkLogin) {
+      await context.browser.goto(url.toString(), options.timeoutMs).catch(() => {});
+      const preLogin = await adapter.checkLogin(context);
+      if (preLogin.state !== "logged_in") {
+        didLogin = true;
+        await waitForInteraction(adapter, context, {
+          type: "wait_for_interaction",
+          kind: "login",
+          provider: preLogin.provider ?? adapter.name,
+          prompt: `Please sign in to ${adapter.name === "x" ? "X" : adapter.name} in the opened Chrome window. Extraction will continue automatically once login is detected.`,
+          reason: preLogin.reason ?? `Not logged in to ${adapter.name}`,
+          requiresVisibleBrowser: true,
+        }, options);
+      }
+    }
 
     if (options.waitMode === "force") {
       await context.browser.goto(url.toString(), options.timeoutMs).catch(() => {});
@@ -414,6 +467,9 @@ export async function runConvertCommand(options: ConvertCommandOptions): Promise
       };
 
       await context.browser.goto(url.toString(), options.timeoutMs).catch(() => {});
+      if (result.interaction.kind === "login") {
+        didLogin = true;
+      }
       await waitForInteraction(adapter, context, result.interaction, options);
       result = await adapter.process(context);
 
@@ -516,6 +572,9 @@ export async function runConvertCommand(options: ConvertCommandOptions): Promise
 
     printOutput(markdown);
   } finally {
+    if (adapter?.exportCookies && context) {
+      await adapter.exportCookies(context, runtime.chrome.profileDir).catch(() => {});
+    }
     await closeRuntime(runtime);
   }
 }

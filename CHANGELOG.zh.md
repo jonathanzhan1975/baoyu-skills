@@ -2,6 +2,69 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.95.0 - 2026-04-08
+
+### 新功能
+- `baoyu-infographic`：新增 `hand-drawn-edu` 风格 — 马卡龙柔和色块、手绘线条、火柴人角色
+- `baoyu-slide-deck`：新增 `hand-drawn-edu` 预设和 `macaron` 色调维度，含柔和马卡龙色板
+
+## 1.94.0 - 2026-04-08
+
+### 新功能
+- `baoyu-cover-image`：新增马卡龙色板和 hand-drawn-edu 风格预设
+
+## 1.93.0 - 2026-04-08
+
+### 新功能
+- `baoyu-article-illustrator`：新增 `hand-drawn-edu` 预设 — flowchart + sketch-notes + macaron 组合，用于手绘教育图解
+
+### 重构
+- `baoyu-article-illustrator`：将色板（Palette）提取为独立的第三维度，形成 Type × Style × Palette 三维系统
+
+### 修复
+- `baoyu-article-illustrator`：在工作流中添加显式的风格文件加载步骤
+
+## 1.92.0 - 2026-04-08
+
+### 新功能
+- `baoyu-article-illustrator`：新增 `macaron` 风格 — 马卡龙柔和色块（浅蓝、浅绿、浅紫、浅橙）配暖白底色，可选手绘模式；新增 `edu-visual` 预设
+
+## 1.90.1 - 2026-04-05
+
+### 修复
+- `baoyu-post-to-wechat`：通过 magic bytes 检测实际图片格式，修复 CDN 返回与 URL 扩展名不一致的 content-type 问题（如 .png URL 实际返回 WebP）；WebP 格式按 PNG 策略处理以保留透明度
+
+## 1.89.1 - 2026-04-01
+
+### 新功能
+- `baoyu-chrome-cdp`：新增 `gracefulKillChrome`，等待 Chrome 进程退出并释放端口；修复 `killChrome` 使用 `exitCode`/`signalCode` 替代 `.killed` 以更可靠地检测进程状态
+- `baoyu-fetch`：在交互等待模式下自动检测登录状态，未登录时提示用户先登录再提取内容
+
+### 维护
+- 同步 vendor baoyu-chrome-cdp 至所有 CDP 技能
+- `baoyu-url-to-markdown`：同步 vendor baoyu-fetch 的登录自动检测功能
+
+## 1.89.0 - 2026-03-31
+
+### 新功能
+- `baoyu-fetch`：新增 X 会话 Cookie 旁路文件，跨运行持久化登录状态；通过 Browser.close 优雅关闭 Chrome；自动检测并清理过期的 Chrome 配置锁文件
+- `baoyu-article-illustrator`：新增暖色调矢量插画配色方案，含 `warm-knowledge` 预设
+- `baoyu-post-to-x`：新增登录后 X 会话持久化、Chrome 锁文件恢复和优雅关闭
+
+### 文档
+- `baoyu-post-to-weibo`：新增发帖类型自动选择规则，优化 CDP Chrome 终止指令
+
+### 重构
+- `baoyu-danger-gemini-web`：使用优雅 Chrome 关闭替代强制终止
+- `baoyu-danger-x-to-markdown`：使用优雅 Chrome 关闭替代强制终止
+
+### 修复
+- 同步 npm lockfile 及修复根目录 Node 测试
+
+### 维护
+- `baoyu-url-to-markdown`：同步 vendor baoyu-fetch 的会话和生命周期改进
+- 更新 bun.lock 文件
+
 ## 1.88.0 - 2026-03-27
 
 ### 新功能

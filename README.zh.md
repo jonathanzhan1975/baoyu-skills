@@ -116,6 +116,10 @@ clawhub install baoyu-markdown-to-html
 
 # 直接输入内容
 /baoyu-xhs-images 今日星座运势
+
+# 非交互模式（跳过所有确认，适用于定时任务）
+/baoyu-xhs-images posts/ai-future/article.md --yes
+/baoyu-xhs-images posts/ai-future/article.md --yes --preset knowledge-card
 ```
 
 **风格**（视觉美学）：`cute`（默认）、`fresh`、`warm`、`bold`、`minimal`、`retro`、`pop`、`notion`、`chalkboard`
@@ -152,7 +156,7 @@ clawhub install baoyu-markdown-to-html
 
 #### baoyu-infographic
 
-专业信息图生成器，支持 20 种布局和 17 种视觉风格。分析内容后推荐布局×风格组合，生成可发布的信息图。
+专业信息图生成器，支持 21 种布局和 21 种视觉风格。分析内容后推荐布局×风格组合，生成可发布的信息图。
 
 ```bash
 # 根据内容自动推荐组合
@@ -265,7 +269,7 @@ clawhub install baoyu-markdown-to-html
 
 #### baoyu-cover-image
 
-为文章生成封面图，支持五维定制系统：类型 × 配色 × 渲染 × 文字 × 氛围。9 种配色方案与 6 种渲染风格组合，提供 54 种独特效果。
+为文章生成封面图，支持五维定制系统：类型 × 配色 × 渲染 × 文字 × 氛围。11 种配色方案与 7 种渲染风格组合，提供 77 种独特效果。
 
 ```bash
 # 根据内容自动选择所有维度
@@ -290,8 +294,8 @@ clawhub install baoyu-markdown-to-html
 
 **五个维度**：
 - **类型 (Type)**：`hero`、`conceptual`、`typography`、`metaphor`、`scene`、`minimal`
-- **配色 (Palette)**：`warm`、`elegant`、`cool`、`dark`、`earth`、`vivid`、`pastel`、`mono`、`retro`
-- **渲染 (Rendering)**：`flat-vector`、`hand-drawn`、`painterly`、`digital`、`pixel`、`chalk`
+- **配色 (Palette)**：`warm`、`elegant`、`cool`、`dark`、`earth`、`vivid`、`pastel`、`mono`、`retro`、`duotone`、`macaron`
+- **渲染 (Rendering)**：`flat-vector`、`hand-drawn`、`painterly`、`digital`、`pixel`、`chalk`、`screen-print`
 - **文字 (Text)**：`none`、`title-only`（默认）、`title-subtitle`、`text-rich`
 - **氛围 (Mood)**：`subtle`、`balanced`（默认）、`bold`
 
@@ -469,20 +473,17 @@ clawhub install baoyu-markdown-to-html
 
 #### baoyu-article-illustrator
 
-智能文章插图技能，采用类型 × 风格二维系统。分析文章结构，识别需要视觉辅助的位置，生成插图。
+智能文章插图技能，采用类型 × 风格 × 色板三维系统。分析文章结构，识别需要视觉辅助的位置，生成插图。
 
 ```bash
 # 根据内容自动选择类型和风格
 /baoyu-article-illustrator path/to/article.md
 
-# 指定类型
-/baoyu-article-illustrator path/to/article.md --type infographic
-
-# 指定风格
-/baoyu-article-illustrator path/to/article.md --style blueprint
-
 # 组合类型和风格
 /baoyu-article-illustrator path/to/article.md --type flowchart --style notion
+
+# 使用色板覆盖
+/baoyu-article-illustrator path/to/article.md --style vector-illustration --palette macaron
 ```
 
 **类型**（信息结构）：
@@ -496,7 +497,7 @@ clawhub install baoyu-markdown-to-html
 | `framework` | 概念图、关系图 | 方法论、架构 |
 | `timeline` | 时间线进展 | 历史、项目进度 |
 
-**风格**（视觉美学）：
+**风格**（渲染手法）：
 
 | 风格 | 描述 | 适用场景 |
 |------|------|----------|
@@ -508,6 +509,14 @@ clawhub install baoyu-markdown-to-html
 | `watercolor` | 柔和艺术感、自然温暖 | 生活方式、旅行、创意 |
 | `editorial` | 杂志风格信息图 | 科技解说、新闻 |
 | `scientific` | 学术精确图表 | 生物、化学、技术 |
+
+**色板**（可选配色覆盖）：
+
+| 色板 | 描述 | 适用场景 |
+|------|------|----------|
+| `macaron` | 马卡龙柔和色块（浅蓝、浅绿、浅紫、浅橙）暖白底 | 教育、知识分享、教程 |
+| `warm` | 暖色系（橙、赭石、金）无冷色 | 品牌、产品、生活方式 |
+| `neon` | 霓虹色（粉、青、黄）深色底 | 游戏、复古、潮流 |
 
 **风格预览**：
 

@@ -64,6 +64,8 @@ export interface Adapter {
   name: string;
   match(input: AdapterInput): boolean;
   checkLogin?(context: AdapterContext): Promise<AdapterLoginInfo>;
+  exportCookies?(context: AdapterContext, profileDir?: string): Promise<boolean>;
+  restoreCookies?(context: AdapterContext, profileDir?: string): Promise<boolean>;
   downloadMedia?(request: MediaDownloadRequest): Promise<MediaDownloadResult>;
   process(context: AdapterContext): Promise<AdapterProcessResult>;
 }

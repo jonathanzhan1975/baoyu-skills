@@ -1,4 +1,5 @@
 import type { Adapter, AdapterLoginInfo } from "../types";
+import { exportCookies, restoreCookies, type CookieSidecarConfig } from "../../browser/cookie-sidecar";
 import { detectInteractionGate } from "../../browser/interaction-gates";
 import type { ExtractedDocument } from "../../extract/document";
 import { collectMediaFromDocument } from "../../media/markdown-media";
@@ -9,6 +10,16 @@ import { collectXJsonPayloads, waitForInitialXPayload } from "./payloads";
 import { extractSingleTweetDocumentFromPayload } from "./single";
 import { extractThreadDocumentFromPayloads } from "./thread";
 import { loadFullXThread } from "./thread-loader";
+
+const cookieConfig: CookieSidecarConfig = {
+  urls: ["https://x.com/", "https://twitter.com/"],
+  filename: "x-session-cookies.json",
+  requiredCookieNames: ["auth_token", "ct0"],
+  filterCookie: (c) => {
+    const d = c.domain ?? "";
+    return d.endsWith("x.com") || d.endsWith("twitter.com");
+  },
+};
 
 function extractDocumentFromPayloads(
   payloads: unknown[],
@@ -48,6 +59,12 @@ export const xAdapter: Adapter = {
   },
   async checkLogin(context) {
     return detectXLogin(context);
+  },
+  async exportCookies(context, profileDir) {
+    return exportCookies(context.browser.targetSession, cookieConfig, profileDir);
+  },
+  async restoreCookies(context, profileDir) {
+    return restoreCookies(context.browser.targetSession, cookieConfig, profileDir);
   },
   async process(context) {
     const statusId = extractStatusId(context.input.url);

@@ -19,6 +19,8 @@ interface ChromeVersionResponse {
   webSocketDebuggerUrl?: string;
 }
 
+const CHROME_LOCK_FILE_NAMES = ["SingletonLock", "SingletonSocket", "SingletonCookie", "chrome.pid"] as const;
+
 function resolveDataBaseDir(): string {
   if (process.platform === "darwin") {
     return path.join(os.homedir(), "Library", "Application Support");
@@ -59,6 +61,57 @@ export function resolveChromeProfileDir(profileDir?: string): string {
 export function ensureChromeProfileDir(profileDir: string): string {
   fs.mkdirSync(profileDir, { recursive: true });
   return profileDir;
+}
+
+export function hasChromeLockArtifacts(entries: readonly string[]): boolean {
+  return CHROME_LOCK_FILE_NAMES.some((name) => entries.includes(name));
+}
+
+export function shouldRetryChromeLaunchRecovery(options: {
+  hasLockArtifacts: boolean;
+  hasLiveOwner: boolean;
+}): boolean {
+  return options.hasLockArtifacts && !options.hasLiveOwner;
+}
+
+export function findChromeProcessUsingProfile(profileDir: string): boolean {
+  if (process.platform === "win32") {
+    return false;
+  }
+
+  try {
+    const result = spawnSync("ps", ["aux"], {
+      encoding: "utf8",
+      timeout: 5_000,
+    });
+    if (result.status !== 0 || !result.stdout) {
+      return false;
+    }
+
+    return result.stdout
+      .split("\n")
+      .some((line) => line.includes(`--user-data-dir=${profileDir}`));
+  } catch {
+    return false;
+  }
+}
+
+export function cleanChromeLockArtifacts(profileDir: string): void {
+  for (const name of CHROME_LOCK_FILE_NAMES) {
+    try {
+      fs.unlinkSync(path.join(profileDir, name));
+    } catch {
+      // Ignore missing files and continue cleaning the remaining artifacts.
+    }
+  }
+}
+
+export async function listChromeProfileEntries(profileDir: string): Promise<string[]> {
+  try {
+    return await fs.promises.readdir(profileDir);
+  } catch {
+    return [];
+  }
 }
 
 async function fetchWithTimeout(url: string, timeoutMs = 3_000): Promise<Response> {

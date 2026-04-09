@@ -2,6 +2,69 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.95.0 - 2026-04-08
+
+### Features
+- `baoyu-infographic`: add `hand-drawn-edu` style — macaron pastels, hand-drawn wobble, stick figures
+- `baoyu-slide-deck`: add `hand-drawn-edu` preset and `macaron` mood dimension with pastel color palette
+
+## 1.94.0 - 2026-04-08
+
+### Features
+- `baoyu-cover-image`: add macaron palette and hand-drawn-edu style preset
+
+## 1.93.0 - 2026-04-08
+
+### Features
+- `baoyu-article-illustrator`: add `hand-drawn-edu` preset — flowchart + sketch-notes + macaron combination for hand-drawn educational diagrams
+
+### Refactor
+- `baoyu-article-illustrator`: extract palette as independent third dimension in Type × Style × Palette system
+
+### Fixes
+- `baoyu-article-illustrator`: add explicit style file loading step in workflow
+
+## 1.92.0 - 2026-04-08
+
+### Features
+- `baoyu-article-illustrator`: add `macaron` style — soft macaron pastel color blocks (blue, mint, lavender, peach) on warm cream background with optional hand-drawn mode; add `edu-visual` preset
+
+## 1.90.1 - 2026-04-05
+
+### Fixes
+- `baoyu-post-to-wechat`: detect actual image format from buffer magic bytes to fix CDN content-type mismatches (e.g. WebP served for .png URLs); treat WebP as PNG-preferred for transparency handling
+
+## 1.89.1 - 2026-04-01
+
+### Features
+- `baoyu-chrome-cdp`: add `gracefulKillChrome` that waits for Chrome to exit and release its port; fix `killChrome` to use `exitCode`/`signalCode` instead of `.killed` for reliable process state detection
+- `baoyu-fetch`: auto-detect login state before extraction in interaction wait mode
+
+### Maintenance
+- Sync vendor baoyu-chrome-cdp across CDP skills
+- `baoyu-url-to-markdown`: sync vendor baoyu-fetch with login auto-detect
+
+## 1.89.0 - 2026-03-31
+
+### Features
+- `baoyu-fetch`: add X session cookie sidecar to persist login across runs, graceful Chrome shutdown via Browser.close, and stale profile lock auto-recovery
+- `baoyu-article-illustrator`: add warm palette variant for vector-illustration style with new `warm-knowledge` preset
+- `baoyu-post-to-x`: add X session persistence after login, Chrome lock recovery, and graceful shutdown
+
+### Documentation
+- `baoyu-post-to-weibo`: add post type auto-selection rules and safer CDP kill instructions
+
+### Refactor
+- `baoyu-danger-gemini-web`: use graceful Chrome shutdown instead of hard kill
+- `baoyu-danger-x-to-markdown`: use graceful Chrome shutdown instead of hard kill
+
+### Fixes
+- Sync npm lockfile and root node tests
+
+### Maintenance
+- `baoyu-url-to-markdown`: sync vendor baoyu-fetch with session and lifecycle changes
+- Update bun.lock files
+
 ## 1.88.0 - 2026-03-27
 
 ### Features

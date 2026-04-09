@@ -2,7 +2,12 @@ import { afterEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { ensureChromeProfileDir, resolveChromeProfileDir } from "../browser/profile";
+import {
+  ensureChromeProfileDir,
+  hasChromeLockArtifacts,
+  resolveChromeProfileDir,
+  shouldRetryChromeLaunchRecovery,
+} from "../browser/profile";
 
 const originalProfile = process.env.BAOYU_CHROME_PROFILE_DIR;
 
@@ -45,5 +50,19 @@ describe("ensureChromeProfileDir", () => {
     } finally {
       fs.rmSync(tempRoot, { force: true, recursive: true });
     }
+  });
+});
+
+describe("stale lock recovery helpers", () => {
+  test("detects Chrome singleton lock artifacts", () => {
+    expect(hasChromeLockArtifacts(["Cookies", "SingletonLock"])).toBe(true);
+    expect(hasChromeLockArtifacts(["chrome.pid"])).toBe(true);
+    expect(hasChromeLockArtifacts(["Preferences", "Cookies"])).toBe(false);
+  });
+
+  test("only retries stale-lock recovery when no live owner exists", () => {
+    expect(shouldRetryChromeLaunchRecovery({ hasLockArtifacts: true, hasLiveOwner: false })).toBe(true);
+    expect(shouldRetryChromeLaunchRecovery({ hasLockArtifacts: true, hasLiveOwner: true })).toBe(false);
+    expect(shouldRetryChromeLaunchRecovery({ hasLockArtifacts: false, hasLiveOwner: false })).toBe(false);
   });
 });

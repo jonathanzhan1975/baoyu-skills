@@ -116,6 +116,10 @@ Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-1
 
 # Direct content input
 /baoyu-xhs-images 今日星座运势
+
+# Non-interactive (skip all confirmations, for scheduled tasks)
+/baoyu-xhs-images posts/ai-future/article.md --yes
+/baoyu-xhs-images posts/ai-future/article.md --yes --preset knowledge-card
 ```
 
 **Styles** (visual aesthetics): `cute` (default), `fresh`, `warm`, `bold`, `minimal`, `retro`, `pop`, `notion`, `chalkboard`
@@ -152,7 +156,7 @@ Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-1
 
 #### baoyu-infographic
 
-Generate professional infographics with 20 layout types and 17 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics.
+Generate professional infographics with 21 layout types and 21 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics.
 
 ```bash
 # Auto-recommend combinations based on content
@@ -265,7 +269,7 @@ Generate professional infographics with 20 layout types and 17 visual styles. An
 
 #### baoyu-cover-image
 
-Generate cover images for articles with 5 dimensions: Type × Palette × Rendering × Text × Mood. Combines 9 color palettes with 6 rendering styles for 54 unique combinations.
+Generate cover images for articles with 5 dimensions: Type × Palette × Rendering × Text × Mood. Combines 11 color palettes with 7 rendering styles for 77 unique combinations.
 
 ```bash
 # Auto-select all dimensions based on content
@@ -290,8 +294,8 @@ Generate cover images for articles with 5 dimensions: Type × Palette × Renderi
 
 **Five Dimensions**:
 - **Type**: `hero`, `conceptual`, `typography`, `metaphor`, `scene`, `minimal`
-- **Palette**: `warm`, `elegant`, `cool`, `dark`, `earth`, `vivid`, `pastel`, `mono`, `retro`
-- **Rendering**: `flat-vector`, `hand-drawn`, `painterly`, `digital`, `pixel`, `chalk`
+- **Palette**: `warm`, `elegant`, `cool`, `dark`, `earth`, `vivid`, `pastel`, `mono`, `retro`, `duotone`, `macaron`
+- **Rendering**: `flat-vector`, `hand-drawn`, `painterly`, `digital`, `pixel`, `chalk`, `screen-print`
 - **Text**: `none`, `title-only` (default), `title-subtitle`, `text-rich`
 - **Mood**: `subtle`, `balanced` (default), `bold`
 
@@ -469,20 +473,17 @@ Knowledge comic creator with flexible art style × tone combinations. Creates or
 
 #### baoyu-article-illustrator
 
-Smart article illustration skill with Type × Style two-dimension approach. Analyzes article structure, identifies positions requiring visual aids, and generates illustrations.
+Smart article illustration skill with Type × Style × Palette three-dimension approach. Analyzes article structure, identifies positions requiring visual aids, and generates illustrations.
 
 ```bash
 # Auto-select type and style based on content
 /baoyu-article-illustrator path/to/article.md
 
-# Specify type
-/baoyu-article-illustrator path/to/article.md --type infographic
-
-# Specify style
-/baoyu-article-illustrator path/to/article.md --style blueprint
-
-# Combine type and style
+# Specify type and style
 /baoyu-article-illustrator path/to/article.md --type flowchart --style notion
+
+# With palette override
+/baoyu-article-illustrator path/to/article.md --style vector-illustration --palette macaron
 ```
 
 **Types** (information structure):
@@ -496,7 +497,7 @@ Smart article illustration skill with Type × Style two-dimension approach. Anal
 | `framework` | Concept maps, relationship diagrams | Methodologies, architecture |
 | `timeline` | Chronological progression | History, project progress |
 
-**Styles** (visual aesthetics):
+**Styles** (rendering approach):
 
 | Style | Description | Best For |
 |-------|-------------|----------|
@@ -508,6 +509,14 @@ Smart article illustration skill with Type × Style two-dimension approach. Anal
 | `watercolor` | Soft artistic with natural warmth | Lifestyle, travel, creative |
 | `editorial` | Magazine-style infographic | Tech explainers, journalism |
 | `scientific` | Academic precise diagrams | Biology, chemistry, technical |
+
+**Palettes** (optional color override):
+
+| Palette | Description | Best For |
+|---------|-------------|----------|
+| `macaron` | Soft pastel blocks (blue, mint, lavender, peach) on warm cream | Educational, knowledge, tutorials |
+| `warm` | Warm earth tones on soft peach, no cool colors | Brand, product, lifestyle |
+| `neon` | Vibrant neon on dark purple | Gaming, retro, pop culture |
 
 **Style Previews**:
 
