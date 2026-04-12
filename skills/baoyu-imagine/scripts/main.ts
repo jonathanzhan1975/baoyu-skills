@@ -83,8 +83,8 @@ Options:
   --size <WxH>              Size (e.g., 1024x1024)
   --quality normal|2k       Quality preset (default: 2k)
   --imageSize 1K|2K|4K      Image size for Google/OpenRouter (default: from quality)
-  --ref <files...>          Reference images (Google, OpenAI, Azure, OpenRouter, Replicate, MiniMax, or Seedream 4.0/4.5/5.0)
-  --n <count>               Number of images for the current task (default: 1)
+  --ref <files...>          Reference images (Google, OpenAI, Azure, OpenRouter, Replicate supported families, MiniMax, or Seedream 4.0/4.5/5.0)
+  --n <count>               Number of images for the current task (default: 1; Replicate currently requires 1)
   --json                    JSON output
   -h, --help                Show help
 
@@ -97,7 +97,7 @@ Batch file format:
         "promptFiles": ["prompts/hero.md"],
         "image": "out/hero.png",
         "provider": "replicate",
-        "model": "google/nano-banana-pro",
+        "model": "google/nano-banana-2",
         "ar": "16:9"
       }
     ]
@@ -107,6 +107,7 @@ Behavior:
   - Batch mode automatically runs in parallel when pending tasks >= 2
   - Each image retries automatically up to 3 attempts
   - Batch summary reports success count, failure count, and per-image errors
+  - Replicate currently supports single-image save semantics only; --n must stay at 1
 
 Environment variables:
   OPENAI_API_KEY            OpenAI API key
@@ -128,7 +129,7 @@ Environment variables:
   ZAI_IMAGE_MODEL           Default Z.AI model (glm-image)
   BIGMODEL_IMAGE_MODEL      Backward-compatible alias for Z.AI model (glm-image)
   MINIMAX_IMAGE_MODEL       Default MiniMax model (image-01)
-  REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-pro)
+  REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-2)
   JIMENG_IMAGE_MODEL        Default Jimeng model (jimeng_t2i_v40)
   SEEDREAM_IMAGE_MODEL      Default Seedream model (doubao-seedream-5-0-260128)
   OPENAI_BASE_URL           Custom OpenAI endpoint
@@ -164,9 +165,11 @@ export function parseArgs(argv: string[]): CliArgs {
     provider: null,
     model: null,
     aspectRatio: null,
+    aspectRatioSource: null,
     size: null,
     quality: null,
     imageSize: null,
+    imageSizeSource: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -270,6 +273,7 @@ export function parseArgs(argv: string[]): CliArgs {
       const v = argv[++i];
       if (!v) throw new Error("Missing value for --ar");
       out.aspectRatio = v;
+      out.aspectRatioSource = "cli";
       continue;
     }
 
@@ -291,6 +295,7 @@ export function parseArgs(argv: string[]): CliArgs {
       const v = argv[++i]?.toUpperCase();
       if (v !== "1K" && v !== "2K" && v !== "4K") throw new Error(`Invalid imageSize: ${v}`);
       out.imageSize = v;
+      out.imageSizeSource = "cli";
       continue;
     }
 
@@ -541,12 +546,20 @@ export async function loadExtendConfig(
 }
 
 export function mergeConfig(args: CliArgs, extend: Partial<ExtendConfig>): CliArgs {
+  const aspectRatio = args.aspectRatio ?? extend.default_aspect_ratio ?? null;
+  const imageSize = args.imageSize ?? extend.default_image_size ?? null;
   return {
     ...args,
     provider: args.provider ?? extend.default_provider ?? null,
     quality: args.quality ?? extend.default_quality ?? null,
-    aspectRatio: args.aspectRatio ?? extend.default_aspect_ratio ?? null,
-    imageSize: args.imageSize ?? extend.default_image_size ?? null,
+    aspectRatio,
+    aspectRatioSource:
+      args.aspectRatioSource ??
+      (args.aspectRatio !== null ? "cli" : (aspectRatio !== null ? "config" : null)),
+    imageSize,
+    imageSizeSource:
+      args.imageSizeSource ??
+      (args.imageSize !== null ? "cli" : (imageSize !== null ? "config" : null)),
   };
 }
 
@@ -759,6 +772,7 @@ export function isRetryableGenerationError(error: unknown): boolean {
     "API error (403)",
     "API error (404)",
     "temporarily disabled",
+    "supports saving exactly one image",
   ];
   return !nonRetryableMarkers.some((marker) => msg.includes(marker));
 }
@@ -872,9 +886,11 @@ export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir
     provider: task.provider ?? baseArgs.provider ?? null,
     model: task.model ?? baseArgs.model ?? null,
     aspectRatio: task.ar ?? baseArgs.aspectRatio ?? null,
+    aspectRatioSource: task.ar != null ? "task" : (baseArgs.aspectRatioSource ?? null),
     size: task.size ?? baseArgs.size ?? null,
     quality: task.quality ?? baseArgs.quality ?? null,
     imageSize: task.imageSize ?? baseArgs.imageSize ?? null,
+    imageSizeSource: task.imageSize != null ? "task" : (baseArgs.imageSizeSource ?? null),
     referenceImages: task.ref ? task.ref.map((filePath) => resolveBatchPath(batchDir, filePath)) : [],
     n: task.n ?? baseArgs.n,
     batchFile: null,

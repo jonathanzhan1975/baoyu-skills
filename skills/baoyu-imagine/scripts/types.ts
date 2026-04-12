@@ -18,9 +18,11 @@ export type CliArgs = {
   provider: Provider | null;
   model: string | null;
   aspectRatio: string | null;
+  aspectRatioSource?: "cli" | "task" | "config" | null;
   size: string | null;
   quality: Quality | null;
   imageSize: string | null;
+  imageSizeSource?: "cli" | "task" | "config" | null;
   referenceImages: string[];
   n: number;
   batchFile: string | null;

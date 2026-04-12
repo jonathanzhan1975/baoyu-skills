@@ -27,7 +27,7 @@ default_model:
   dashscope: null           # e.g., "qwen-image-2.0-pro"
   zai: null                 # e.g., "glm-image"
   minimax: null             # e.g., "image-01"
-  replicate: null           # e.g., "google/nano-banana-pro"
+  replicate: null           # e.g., "google/nano-banana-2"
 
 batch:
   max_workers: 10
@@ -107,7 +107,7 @@ default_model:
   dashscope: "qwen-image-2.0-pro"
   zai: "glm-image"
   minimax: "image-01"
-  replicate: "google/nano-banana-pro"
+  replicate: "google/nano-banana-2"
 batch:
   max_workers: 10
   provider_limits:

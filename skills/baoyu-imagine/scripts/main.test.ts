@@ -28,9 +28,11 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     provider: null,
     model: null,
     aspectRatio: null,
+    aspectRatioSource: null,
     size: null,
     quality: null,
     imageSize: null,
+    imageSizeSource: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -97,7 +99,9 @@ test("parseArgs parses the main baoyu-imagine CLI flags", () => {
   assert.equal(args.imagePath, "out/hero");
   assert.equal(args.provider, "zai");
   assert.equal(args.quality, "2k");
+  assert.equal(args.aspectRatioSource, null);
   assert.equal(args.imageSize, "4K");
+  assert.equal(args.imageSizeSource, "cli");
   assert.deepEqual(args.referenceImages, ["ref/one.png", "ref/two.jpg"]);
   assert.equal(args.n, 3);
   assert.equal(args.jobs, 5);
@@ -254,7 +258,21 @@ test("mergeConfig only fills values missing from CLI args", () => {
   assert.equal(merged.provider, "openai");
   assert.equal(merged.quality, "2k");
   assert.equal(merged.aspectRatio, "3:2");
+  assert.equal(merged.aspectRatioSource, "config");
   assert.equal(merged.imageSize, "4K");
+  assert.equal(merged.imageSizeSource, "cli");
+});
+
+test("mergeConfig tags inherited imageSize defaults so providers can ignore incompatible config", () => {
+  const merged = mergeConfig(
+    makeArgs(),
+    {
+      default_image_size: "2K",
+    } satisfies Partial<ExtendConfig>,
+  );
+
+  assert.equal(merged.imageSize, "2K");
+  assert.equal(merged.imageSizeSource, "config");
 });
 
 test("detectProvider rejects non-ref-capable providers and prefers Google first when multiple keys exist", (t) => {
@@ -503,5 +521,11 @@ test("path normalization, worker count, and retry classification follow expected
   assert.equal(getWorkerCount(5, 0, 4), 1);
 
   assert.equal(isRetryableGenerationError(new Error("API error (401): denied")), false);
+  assert.equal(
+    isRetryableGenerationError(
+      new Error("Replicate returned 2 outputs, but baoyu-imagine currently supports saving exactly one image per request."),
+    ),
+    false,
+  );
   assert.equal(isRetryableGenerationError(new Error("socket hang up")), true);
 });
