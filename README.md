@@ -99,7 +99,7 @@ Content generation and publishing skills.
 
 #### baoyu-xhs-images
 
-Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-10 cartoon-style infographics with **Style × Layout** two-dimensional system.
+Xiaohongshu image card series generator. Breaks down content into 1-10 cartoon-style image cards with **Style × Layout** system and optional palette override.
 
 ```bash
 # Auto-select style and layout
@@ -112,7 +112,10 @@ Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-1
 /baoyu-xhs-images posts/ai-future/article.md --layout dense
 
 # Combine style and layout
-/baoyu-xhs-images posts/ai-future/article.md --style tech --layout list
+/baoyu-xhs-images posts/ai-future/article.md --style notion --layout list
+
+# Override palette
+/baoyu-xhs-images posts/ai-future/article.md --style notion --palette macaron
 
 # Direct content input
 /baoyu-xhs-images 今日星座运势
@@ -122,7 +125,9 @@ Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-1
 /baoyu-xhs-images posts/ai-future/article.md --yes --preset knowledge-card
 ```
 
-**Styles** (visual aesthetics): `cute` (default), `fresh`, `warm`, `bold`, `minimal`, `retro`, `pop`, `notion`, `chalkboard`
+**Styles** (visual aesthetics): `cute` (default), `fresh`, `warm`, `bold`, `minimal`, `retro`, `pop`, `notion`, `chalkboard`, `study-notes`, `screen-print`, `sketch-notes`
+
+**Palettes** (optional color override): `macaron`, `warm`, `neon`
 
 **Style Previews**:
 
@@ -266,6 +271,43 @@ Generate professional infographics with 21 layout types and 21 visual styles. An
 | ui-wireframe | subway-map | ikea-manual |
 | ![knolling](./screenshots/infographic-styles/knolling.webp) | ![lego-brick](./screenshots/infographic-styles/lego-brick.webp) | |
 | knolling | lego-brick | |
+
+#### baoyu-diagram
+
+Generate publication-ready SVG diagrams from source material — flowcharts, sequence/protocol diagrams, structural/architecture diagrams, and illustrative intuition diagrams. Analyzes input material to recommend diagram type(s) and splitting strategy, confirms the plan once, then generates all diagrams. Claude writes real SVG code directly following a cohesive design system. Output is self-contained `.svg` files with embedded styles and auto dark-mode.
+
+```bash
+# Topic string — skill analyzes and proposes a plan
+/baoyu-diagram "how JWT authentication works"
+/baoyu-diagram "Kubernetes architecture" --type structural
+/baoyu-diagram "OAuth 2.0 flow"          --type sequence
+
+# File path — skill reads, analyzes, and proposes a plan
+/baoyu-diagram path/to/article.md
+
+# Language and output path
+/baoyu-diagram "微服务架构" --lang zh
+/baoyu-diagram "build pipeline" --out docs/build-pipeline.svg
+```
+
+**Options**:
+| Option | Description |
+|--------|-------------|
+| `--type <name>` | `flowchart`, `sequence`, `structural`, `illustrative`, `class`, `auto` (default). Skips type recommendation. |
+| `--lang <code>` | Output language (en, zh, ja, ...) |
+| `--out <path>` | Output file path. Generates exactly one diagram focused on the most important aspect. |
+
+**Diagram types**:
+
+| Type | Reader need | Verbs that trigger it |
+|------|-------------|------------------------|
+| `flowchart` | Walk me through the steps in order | walk through, steps, process, lifecycle, workflow, state machine |
+| `sequence` | Who talks to whom, in what order | protocol, handshake, auth flow, OAuth, TCP, request/response |
+| `structural` | Show me what's inside what, how it's organised | architecture, components, topology, layout, what's inside |
+| `illustrative` | Give me the intuition — draw the mechanism | how does X work, explain X, intuition for, why does X do Y |
+| `class` | What are the types and how are they related | class diagram, UML, inheritance, interface, schema |
+
+Not an image-generation skill — no LLM image model is called. Claude writes the SVG by hand with hand-computed layout math, so every diagram honors the design system. Embedded `<style>` block with `@media (prefers-color-scheme: dark)` means the same file renders correctly in both light and dark mode anywhere it's embedded.
 
 #### baoyu-cover-image
 
@@ -702,14 +744,23 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 # DashScope with custom size
 /baoyu-imagine --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
 
+# Z.AI GLM-Image
+/baoyu-imagine --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
+
 # MiniMax
 /baoyu-imagine --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
 
 # MiniMax with subject reference
 /baoyu-imagine --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
 
-# Replicate
+# Replicate (default: google/nano-banana-2)
 /baoyu-imagine --prompt "A cat" --image cat.png --provider replicate
+
+# Replicate Seedream 4.5
+/baoyu-imagine --prompt "A studio portrait" --image portrait.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
+
+# Replicate Wan 2.7 Image Pro
+/baoyu-imagine --prompt "A concept frame" --image frame.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
 
 # Jimeng (即梦)
 /baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider jimeng
@@ -732,14 +783,15 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `--image` | Output image path (required) |
 | `--batchfile` | JSON batch file for multi-image generation |
 | `--jobs` | Worker count for batch mode |
-| `--provider` | `google`, `openai`, `azure`, `openrouter`, `dashscope`, `minimax`, `jimeng`, `seedream`, or `replicate` |
-| `--model`, `-m` | Model ID or deployment name. Azure uses deployment name; OpenRouter uses full model IDs; MiniMax uses `image-01` / `image-01-live` |
+| `--provider` | `google`, `openai`, `azure`, `openrouter`, `dashscope`, `zai`, `minimax`, `jimeng`, `seedream`, or `replicate` |
+| `--model`, `-m` | Model ID or deployment name. Azure uses deployment name; OpenRouter uses full model IDs; Z.AI uses `glm-image`; MiniMax uses `image-01` / `image-01-live` |
 | `--ar` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size` | Size (e.g., `1024x1024`) |
 | `--quality` | `normal` or `2k` (default: `2k`) |
 | `--imageSize` | `1K`, `2K`, or `4K` for Google/OpenRouter |
-| `--ref` | Reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 5.0/4.5/4.0) |
-| `--n` | Number of images per request |
+| `--imageApiDialect` | `openai-native` or `ratio-metadata` for OpenAI-compatible gateways |
+| `--ref` | Reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate supported families, MiniMax, or Seedream 5.0/4.5/4.0) |
+| `--n` | Number of images per request (`replicate` currently requires `--n 1`) |
 | `--json` | JSON output |
 
 **Environment Variables** (see [Environment Configuration](#environment-configuration) for setup):
@@ -751,6 +803,8 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `GOOGLE_API_KEY` | Google API key | - |
 | `GEMINI_API_KEY` | Alias for `GOOGLE_API_KEY` | - |
 | `DASHSCOPE_API_KEY` | DashScope API key (Aliyun) | - |
+| `ZAI_API_KEY` | Z.AI API key | - |
+| `BIGMODEL_API_KEY` | Backward-compatible alias for Z.AI API key | - |
 | `MINIMAX_API_KEY` | MiniMax API key | - |
 | `REPLICATE_API_TOKEN` | Replicate API token | - |
 | `JIMENG_ACCESS_KEY_ID` | Jimeng Volcengine access key | - |
@@ -762,11 +816,14 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter model | `google/gemini-3.1-flash-image-preview` |
 | `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
+| `ZAI_IMAGE_MODEL` | Z.AI model | `glm-image` |
+| `BIGMODEL_IMAGE_MODEL` | Backward-compatible alias for Z.AI model | `glm-image` |
 | `MINIMAX_IMAGE_MODEL` | MiniMax model | `image-01` |
-| `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-pro` |
+| `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-2` |
 | `JIMENG_IMAGE_MODEL` | Jimeng model | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | Seedream model | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint | - |
+| `OPENAI_IMAGE_API_DIALECT` | OpenAI-compatible image API dialect (`openai-native` or `ratio-metadata`) | `openai-native` |
 | `OPENAI_IMAGE_USE_CHAT` | Use `/chat/completions` for OpenAI image generation | `false` |
 | `AZURE_OPENAI_BASE_URL` | Azure resource or deployment endpoint | - |
 | `AZURE_API_VERSION` | Azure image API version | `2025-04-01-preview` |
@@ -775,6 +832,8 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `OPENROUTER_TITLE` | Optional app name for OpenRouter attribution | - |
 | `GOOGLE_BASE_URL` | Custom Google endpoint | - |
 | `DASHSCOPE_BASE_URL` | Custom DashScope endpoint | - |
+| `ZAI_BASE_URL` | Custom Z.AI endpoint | `https://api.z.ai/api/paas/v4` |
+| `BIGMODEL_BASE_URL` | Backward-compatible alias for Z.AI endpoint | - |
 | `MINIMAX_BASE_URL` | Custom MiniMax endpoint | `https://api.minimax.io` |
 | `REPLICATE_BASE_URL` | Custom Replicate endpoint | - |
 | `JIMENG_BASE_URL` | Custom Jimeng endpoint | `https://visual.volcengineapi.com` |
@@ -787,16 +846,20 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 **Provider Notes**:
 - Azure OpenAI: `--model` means Azure deployment name, not the underlying model family.
 - DashScope: `qwen-image-2.0-pro` is the recommended default for custom `--size`, `21:9`, and strong Chinese/English text rendering.
+- Z.AI: `glm-image` is recommended for posters, diagrams, and text-heavy Chinese/English images. Reference images are not supported.
 - MiniMax: `image-01` supports documented custom `width` / `height`; `image-01-live` is lower latency and works best with `--ar`.
 - MiniMax reference images are sent as `subject_reference`; the current API is specialized toward character / portrait consistency.
 - Jimeng does not support reference images.
 - Seedream reference images are supported by Seedream 5.0 / 4.5 / 4.0, not Seedream 3.0.
+- Replicate defaults to `google/nano-banana-2`. `baoyu-imagine` only enables Replicate advanced options for `google/nano-banana*`, `bytedance/seedream-4.5`, `bytedance/seedream-5-lite`, `wan-video/wan-2.7-image`, and `wan-video/wan-2.7-image-pro`.
+- Replicate currently saves exactly one output image per request. `--n > 1` is blocked locally instead of silently dropping extra results.
+- Replicate model behavior is family-specific: nano-banana uses `--quality` / `--ar`, Seedream uses validated `--size` / `--ar`, and Wan uses validated `--size` (with `--ar` converted locally to a concrete size).
 
 **Provider Auto-Selection**:
 1. If `--provider` is specified → use it
 2. If `--ref` is provided and no provider is specified → try Google, then OpenAI, Azure, OpenRouter, Replicate, Seedream, and finally MiniMax
 3. If only one API key is available → use that provider
-4. If multiple providers are available → default to Google
+4. If multiple providers are available → default to Google, then OpenAI, Azure, OpenRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream
 
 #### baoyu-danger-gemini-web
 
@@ -1096,6 +1159,11 @@ DASHSCOPE_API_KEY=sk-xxx
 DASHSCOPE_IMAGE_MODEL=qwen-image-2.0-pro
 # DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
 
+# Z.AI
+ZAI_API_KEY=xxx
+ZAI_IMAGE_MODEL=glm-image
+# ZAI_BASE_URL=https://api.z.ai/api/paas/v4
+
 # MiniMax
 MINIMAX_API_KEY=xxx
 MINIMAX_IMAGE_MODEL=image-01
@@ -1103,7 +1171,7 @@ MINIMAX_IMAGE_MODEL=image-01
 
 # Replicate
 REPLICATE_API_TOKEN=r8_xxx
-REPLICATE_IMAGE_MODEL=google/nano-banana-pro
+REPLICATE_IMAGE_MODEL=google/nano-banana-2
 # REPLICATE_BASE_URL=https://api.replicate.com
 
 # Jimeng (即梦)
@@ -1196,6 +1264,7 @@ This project was inspired by and builds upon the following open source projects:
 - [doocs/md](https://github.com/doocs/md) by [@doocs](https://github.com/doocs) — Core implementation logic for Markdown to HTML conversion
 - [High-density Infographic Prompt](https://waytoagi.feishu.cn/wiki/YG0zwalijihRREkgmPzcWRInnUg) by AJ@WaytoAGI — Inspiration for the infographic skill
 - [qiaomu-mondo-poster-design](https://github.com/joeseesun/qiaomu-mondo-poster-design) by [@joeseesun](https://github.com/joeseesun)（乔木） — Inspiration for the Mondo style
+- [architecture-diagram-generator](https://github.com/Cocoon-AI/architecture-diagram-generator) by [@Cocoon-AI](https://github.com/Cocoon-AI) — Inspiration for the diagram skill's design system
 
 ## License
 

@@ -2,6 +2,112 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.108.0 - 2026-04-19
+
+### 重构
+- 将技能文档拆分为聚焦的参考文件，提升可维护性
+- 将多技能共享代码迁移至 npm 包管理
+
+## 1.107.0 - 2026-04-15
+
+### 新功能
+- `baoyu-diagram`：新增 SVG 转 @2x PNG 转换脚本 —— 使用 Sharp 自动将生成的 SVG 图表转为 @2x PNG；精简合并参考文件，新增 `{baseDir}` 路径解析以支持可移植的技能加载
+
+### 修复
+- `claude-plugin`：支持内联 marketplace manifest (#130)
+
+## 1.106.0 - 2026-04-14
+
+### 新功能
+- `baoyu-diagram`：新增架构图丰富化规则 —— 自动扩展架构图，补充多客户端类型、各服务技术栈、数据库分层、消息总线和分色分类；新增完整结构布局模式、架构专用陷阱提示、网络拓扑模板和复杂图表布局计算
+
+## 1.105.0 - 2026-04-13
+
+### 新功能
+- `baoyu-diagram`：统一为分析→确认→生成工作流 —— 移除单图/多图模式区分；技能现在分析任意输入素材，推荐图表类型和拆分策略，一次确认后批量生成所有图表
+
+## 1.104.0 - 2026-04-13
+
+### 新功能
+- `baoyu-diagram`：新增 Mermaid 草图步骤（6d-0），在生成 SVG 前先写 Mermaid 代码块作为结构意图；在步骤 6f 新增 Mermaid–SVG 一致性检查
+
+### 修复
+- `baoyu-post-to-wechat`：在粘贴和输入操作前校验编辑器焦点，避免粘贴静默失败
+
+## 1.103.1 - 2026-04-13
+
+### 修复
+- `baoyu-markdown-to-html`：修复文章摘要中 HTML 实体未解码及 HTML 标签未剥离的问题
+- `baoyu-post-to-weibo`：修复文章摘要中 HTML 实体未解码及 HTML 标签未剥离的问题
+
+## 1.103.0 - 2026-04-12
+
+### 新功能
+- `baoyu-diagram`：新增多图模式 —— 分析文章内容，在识别出的位置批量生成图表；新增 `--density` 参数（`minimal`、`balanced`、`per-section`、`rich`）和 `--mode` 参数（`single`、`multi`、`auto`）；根据输入自动判断模式（文件路径→多图，短主题→单图）；自动在文章中插入图表链接；输出目录结构 `diagram/{article-slug}/NN-{type}-{slug}/`
+
+### 修复
+- `baoyu-article-illustrator`：修复生成图像中出现颜色名称和色值文字的问题 —— 在所有调色板参考文件和提示构建规则中添加语义约束
+- `baoyu-cover-image`：修复生成图像中出现颜色名称和色值文字的问题 —— 在所有调色板参考文件和提示模板中添加约束
+- `baoyu-image-cards`：修复生成图像中出现颜色名称文字的问题
+- `baoyu-post-to-wechat`：修复文章摘要中 HTML 实体未解码及 HTML 标签未剥离的问题，避免微信文章摘要显示乱码
+
+## 1.102.0 - 2026-04-12
+
+### 新功能
+- `baoyu-imagine`：新增 OpenAI 兼容图像 API 方言支持 —— 新增 `--imageApiDialect` 参数、`OPENAI_IMAGE_API_DIALECT` 环境变量及 `default_image_api_dialect` 配置项，用于对接期望宽高比格式 `size` 加 `metadata.resolution` 的兼容网关
+
+## 1.101.0 - 2026-04-12
+
+### 新功能
+- `baoyu-imagine`：改进 Replicate 服务商兼容性 —— 针对不同模型系列（nano-banana、Seedream 4.5、Seedream 5 Lite、Wan 2.7 Image）实现专属输入构建器和验证器；将默认模型更新为 `google/nano-banana-2`；修复 Seedream 4.5 自定义尺寸编码（改用 width/height schema）；修复不支持的 Replicate 模型的宽高比默认值继承问题；在请求到达 API 前拦截多图请求 (by @justnode)
+
+## 1.100.0 - 2026-04-12
+
+### 新功能
+- `baoyu-imagine`：新增 Z.AI GLM-Image 服务商支持，支持 `glm-image` 和 `cogview-4-250304` 模型，通过 Z.AI 同步图像 API 调用；配置 `ZAI_API_KEY`（或 `BIGMODEL_API_KEY` 向后兼容）
+
+## 1.99.1 - 2026-04-11
+
+### 修复
+- `baoyu-article-illustrator`：未指定 `--model` 时，批处理任务中不再写入 `model` 字段，改由 `baoyu-imagine` 从环境变量或配置中解析默认值
+
+## 1.99.0 - 2026-04-10
+
+### 新功能
+- `baoyu-diagram`：新增技能，用于生成可直接发布的 SVG 图表 —— 包括流程图、架构/结构图、示意图（直觉图解）。Claude 直接输出符合统一设计规范的真实 SVG 代码，产物是单个自包含的 `.svg` 文件，内嵌样式并自动支持深色模式，可直接嵌入文章、微信公众号、幻灯片和文档中
+
+## 1.98.0 - 2026-04-10
+
+### 新功能
+- `baoyu-xhs-images`：恢复为正式技能（移除废弃警告）
+- `baoyu-xhs-images`：新增 `sketch-notes` 风格 —— 手绘教育信息图，马卡龙配色，波动线条，暖奶油背景
+- `baoyu-xhs-images`：新增配色系统（`macaron`、`warm`、`neon`），支持 `--palette` 参数覆盖风格默认颜色
+- `baoyu-xhs-images`：新增 3 个预设：`hand-drawn-edu`、`sketch-card`、`sketch-summary`
+
+## 1.97.1 - 2026-04-09
+
+### 修复
+- `baoyu-image-cards`：将配色方案中 "Zone N" 角色名改为 "Block Color"，防止 AI 将标签文字渲染到图片中
+
+## 1.97.0 - 2026-04-09
+
+### 新功能
+- `baoyu-image-cards`：新增 `sketch-notes` 风格、配色系统（`macaron`、`warm`、`neon`）及 3 个新预设（`hand-drawn-edu`、`sketch-card`、`sketch-summary`）
+
+### 修复
+- `baoyu-xhs-images`：优化已弃用技能描述以改善路由匹配
+
+## 1.96.0 - 2026-04-09
+
+### 新功能
+- `baoyu-image-cards`：新增图片卡片系列技能，从 `baoyu-xhs-images` 迁移，解除小红书平台绑定
+- `baoyu-xhs-images`：已弃用，迁移至 `baoyu-image-cards`
+
+## 1.95.1 - 2026-04-09
+
+### 修复
+- `baoyu-slide-deck`：添加 `pptxgenjs` 依赖，PDF 合并时通过魔数字节检测图片格式替代文件扩展名判断
+
 ## 1.95.0 - 2026-04-08
 
 ### 新功能

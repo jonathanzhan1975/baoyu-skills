@@ -2,6 +2,112 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.108.0 - 2026-04-19
+
+### Refactor
+- Refactor skills into focused reference files for better maintainability
+- Use npm packages for shared skill code across skills
+
+## 1.107.0 - 2026-04-15
+
+### Features
+- `baoyu-diagram`: add SVG-to-PNG @2x conversion script — auto-converts generated SVG diagrams to @2x PNG using Sharp; consolidate reference files and add `{baseDir}` path resolution for portable skill loading
+
+### Fixes
+- `claude-plugin`: allow inline marketplace manifest (#130)
+
+## 1.106.0 - 2026-04-14
+
+### Features
+- `baoyu-diagram`: add architecture enrichment rules — automatically expand architecture diagrams with multiple client types, per-service tech stacks, database tiers, message buses, and color-coded categories; add full structural layout patterns, architecture-specific pitfalls, network topology templates, and layout math for complex diagrams
+
+## 1.105.0 - 2026-04-13
+
+### Features
+- `baoyu-diagram`: unify to analyze→confirm→generate workflow — remove single/multi mode split; skill now analyzes any input material, recommends diagram types and splitting strategy, confirms once, then generates all diagrams
+
+## 1.104.0 - 2026-04-13
+
+### Features
+- `baoyu-diagram`: add Mermaid sketch step (6d-0) before SVG generation — write a Mermaid code block as structural intent; add Mermaid–SVG consistency check in step 6f
+
+### Fixes
+- `baoyu-post-to-wechat`: verify editor focus before paste and type operations to prevent silent paste failures
+
+## 1.103.1 - 2026-04-13
+
+### Fixes
+- `baoyu-markdown-to-html`: decode HTML entities and strip tags from article summary
+- `baoyu-post-to-weibo`: decode HTML entities and strip tags from article summary
+
+## 1.103.0 - 2026-04-12
+
+### Features
+- `baoyu-diagram`: add multi-diagram mode — analyze article content and generate multiple diagrams at identified positions; new `--density` option (`minimal`, `balanced`, `per-section`, `rich`) and `--mode` option (`single`, `multi`, `auto`); auto-detects mode from input (file path → multi, short topic → single); inserts diagram image links into article; output structure `diagram/{article-slug}/NN-{type}-{slug}/`
+
+### Fixes
+- `baoyu-article-illustrator`: prevent color names and hex codes from appearing as visible text in generated images — add semantic constraint to all palette references and prompt construction rules
+- `baoyu-cover-image`: prevent color names and hex codes from appearing as visible text in generated images — add constraint to all palette references and prompt template
+- `baoyu-image-cards`: prevent color names from appearing as visible text in generated images
+- `baoyu-post-to-wechat`: decode HTML entities and strip HTML tags from article summary before using as WeChat article digest
+
+## 1.102.0 - 2026-04-12
+
+### Features
+- `baoyu-imagine`: add OpenAI-compatible image API dialect — new `--imageApiDialect` flag, `OPENAI_IMAGE_API_DIALECT` env var, and `default_image_api_dialect` config for gateways that expect aspect-ratio `size` plus `metadata.resolution` instead of pixel `size`
+
+## 1.101.0 - 2026-04-12
+
+### Features
+- `baoyu-imagine`: improve Replicate provider compatibility — route models through family-specific input builders and validators (nano-banana, Seedream 4.5, Seedream 5 Lite, Wan 2.7 Image); update default model to `google/nano-banana-2`; fix Seedream 4.5 custom size encoding to use width/height schema; fix aspect-ratio default inheritance for unsupported Replicate models; block multi-output requests before they reach the API (by @justnode)
+
+## 1.100.0 - 2026-04-12
+
+### Features
+- `baoyu-imagine`: add Z.AI GLM-Image provider — supports `glm-image` and `cogview-4-250304` models via the Z.AI sync image API; configure with `ZAI_API_KEY` (or `BIGMODEL_API_KEY` for backward compatibility)
+
+## 1.99.1 - 2026-04-11
+
+### Fixes
+- `baoyu-article-illustrator`: omit `model` field from batch tasks when `--model` is not specified, letting `baoyu-imagine` resolve the default from env/config
+
+## 1.99.0 - 2026-04-10
+
+### Features
+- `baoyu-diagram`: add new skill for generating publication-ready SVG diagrams — flowcharts, structural/architecture diagrams, and illustrative intuition diagrams. Claude writes real SVG code directly following a cohesive design system; output is a single self-contained `.svg` file with embedded styles and auto dark-mode, ready to embed in articles, WeChat posts, slides, and docs
+
+## 1.98.0 - 2026-04-10
+
+### Features
+- `baoyu-xhs-images`: Restore as active skill (remove deprecated warning)
+- `baoyu-xhs-images`: Add `sketch-notes` style — hand-drawn educational infographic with macaron pastels, wobble lines, and warm cream background
+- `baoyu-xhs-images`: Add palette system (`macaron`, `warm`, `neon`) as optional `--palette` color override dimension
+- `baoyu-xhs-images`: Add 3 new presets: `hand-drawn-edu`, `sketch-card`, `sketch-summary`
+
+## 1.97.1 - 2026-04-09
+
+### Fixes
+- `baoyu-image-cards`: rename palette color roles from "Zone N" to "Block Color" to prevent AI rendering labels as visible text in images
+
+## 1.97.0 - 2026-04-09
+
+### Features
+- `baoyu-image-cards`: add `sketch-notes` style, palette system (`macaron`, `warm`, `neon`), and 3 new presets (`hand-drawn-edu`, `sketch-card`, `sketch-summary`)
+
+### Fixes
+- `baoyu-xhs-images`: improve deprecated skill description for better routing
+
+## 1.96.0 - 2026-04-09
+
+### Features
+- `baoyu-image-cards`: add image card series skill migrated from `baoyu-xhs-images`, decoupled from Xiaohongshu platform
+- `baoyu-xhs-images`: deprecated, migrated to `baoyu-image-cards`
+
+## 1.95.1 - 2026-04-09
+
+### Fixes
+- `baoyu-slide-deck`: add `pptxgenjs` dependency and detect image format by magic bytes instead of file extension in PDF merge
+
 ## 1.95.0 - 2026-04-08
 
 ### Features
