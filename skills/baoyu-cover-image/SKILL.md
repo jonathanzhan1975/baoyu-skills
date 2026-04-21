@@ -1,7 +1,7 @@
 ---
 name: baoyu-cover-image
 description: Generates article cover images with 5 dimensions (type, palette, rendering, text, mood) combining 11 color palettes and 7 rendering styles. Supports cinematic (2.35:1), widescreen (16:9), and square (1:1) aspects. Use when user asks to "generate cover image", "create article cover", or "make cover".
-version: 1.56.1
+version: 1.56.2
 metadata:
   openclaw:
     homepage: https://github.com/JimLiu/baoyu-skills#baoyu-cover-image
@@ -38,6 +38,15 @@ Setting `preferred_image_backend: ask` forces the step-3 prompt every run regard
 **Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
 
 Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+
+## Confirmation Policy
+
+Default behavior: **confirm before generation**.
+
+- Treat explicit skill invocation, a file path, matched keywords/presets, `EXTEND.md` defaults, and any documented auto-selection as **recommendation inputs only**. None of them authorizes skipping confirmation.
+- Do **not** start Step 3 or Step 4 until the user confirms the dimensions / aspect / language / backend choices.
+- Skip confirmation only when the current request explicitly says to do so, for example: `--quick`, "直接生成", "不用确认", "跳过确认", "按默认出图", or equivalent wording. `quick_mode: true` in `EXTEND.md` counts as a standing explicit opt-out — set it only when you want every run to skip Step 2.
+- If confirmation is skipped explicitly, state the assumed dimensions / aspect / language / backend in the next user-facing update before generating.
 
 ## Options
 
@@ -169,6 +178,8 @@ If reference images contain **people** who should appear in the cover:
 See [reference-images.md](references/workflow/reference-images.md) for full decision table.
 
 ### Step 2: Confirm Options ⚠️
+
+**Hard gate**: this step is mandatory per the [Confirmation Policy](#confirmation-policy) — Steps 3–4 cannot start until the user confirms here (or explicitly opts out with `--quick` / `quick_mode: true` / equivalent wording in the current request).
 
 **MUST use `AskUserQuestion` tool** to present options as interactive selection — NOT plain text tables. Present up to 4 questions in a single `AskUserQuestion` call (Type, Palette, Rendering, Font + Settings). Each question shows the recommended option first with reason, followed by alternatives.
 
