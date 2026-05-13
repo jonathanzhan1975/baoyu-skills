@@ -339,4 +339,105 @@ describe("x article extraction", () => {
     expect(content.markdown).toContain("https://example.com/report");
     expect(content.markdown).not.toContain("https://t.co/example");
   });
+
+  test("renders article video media as the highest bitrate mp4 link", () => {
+    const payload = {
+      data: {
+        tweetResult: {
+          result: {
+            rest_id: "2046628728210350366",
+            legacy: {
+              full_text: "Fallback text",
+              favorite_count: 12,
+              retweet_count: 3,
+              reply_count: 1,
+              created_at: "Tue Apr 21 16:34:47 +0000 2026",
+            },
+            core: {
+              user_results: {
+                result: {
+                  legacy: {
+                    name: "Google AI Studio",
+                    screen_name: "GoogleAIStudio",
+                  },
+                },
+              },
+            },
+            article: {
+              article_results: {
+                result: {
+                  title: "Article with video",
+                  media_entities: [
+                    {
+                      media_id: "2046627051822530560",
+                      media_info: {
+                        __typename: "ApiVideo",
+                        variants: [
+                          {
+                            bit_rate: 2176000,
+                            content_type: "video/mp4",
+                            url: "https://video.twimg.com/amplify_video/2046627051822530560/vid/avc1/1280x720/medium.mp4",
+                          },
+                          {
+                            content_type: "application/x-mpegURL",
+                            url: "https://video.twimg.com/amplify_video/2046627051822530560/pl/playlist.m3u8",
+                          },
+                          {
+                            bit_rate: 10368000,
+                            content_type: "video/mp4",
+                            url: "https://video.twimg.com/amplify_video/2046627051822530560/vid/avc1/1920x1080/high.mp4",
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  content_state: {
+                    blocks: [
+                      {
+                        type: "atomic",
+                        text: " ",
+                        data: {},
+                        entityRanges: [{ key: 0, length: 1, offset: 0 }],
+                        inlineStyleRanges: [],
+                      },
+                    ],
+                    entityMap: [
+                      {
+                        key: "0",
+                        value: {
+                          type: "MEDIA",
+                          mutability: "Immutable",
+                          data: {
+                            mediaItems: [{ mediaId: "2046627051822530560" }],
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const document = extractArticleDocumentFromPayload(
+      payload,
+      "2046628728210350366",
+      "https://x.com/GoogleAIStudio/status/2046628728210350366",
+    );
+
+    expect(document).not.toBeNull();
+
+    const content = document?.content[0];
+    expect(content?.type).toBe("markdown");
+    if (!content || content.type !== "markdown") {
+      throw new Error("Expected markdown content");
+    }
+
+    expect(content.markdown).toBe(
+      "[video](https://video.twimg.com/amplify_video/2046627051822530560/vid/avc1/1920x1080/high.mp4)",
+    );
+  });
 });

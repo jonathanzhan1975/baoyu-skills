@@ -5,6 +5,21 @@ English | [简体中文](./CHANGELOG.zh-CN.md)
 The format is inspired by Keep a Changelog, and the project follows Semantic
 Versioning.
 
+## [0.1.2] - 2026-04-21
+
+#### Changed
+
+- Upgraded Defuddle to 0.17.0 and jsdom to 29.0.2 for generic extraction.
+- Added an `@xmldom/xmldom` override to keep the optional Defuddle MathML
+  dependency chain on a non-vulnerable release.
+
+#### Fixed
+
+- Fixed X/Twitter video extraction for single posts and X Articles by selecting
+  the highest-bitrate MP4 variant instead of the preview image URL.
+- Fixed X Article media rendering so video entities are emitted as
+  `[video](...)` links instead of image embeds.
+
 ## [0.1.1] - 2026-03-27
 
 #### Added

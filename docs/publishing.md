@@ -21,18 +21,18 @@ bash scripts/sync-clawhub.sh           # sync all skills
 bash scripts/sync-clawhub.sh <skill>   # sync one skill
 ```
 
-Release hooks are configured via `.releaserc.yml`. This repo does not stage a separate release directory: release prep verifies that skills depend on published npm package versions, and publish reads the skill directory directly.
+Release hooks are configured via `.releaserc.yml`. This repo does not stage a separate release directory: publish reads the skill directory directly and validates that local package references and CLI bin targets are self-contained.
 
 ## Shared Workspace Packages
 
-`packages/` is the **only** source of truth for shared runtime code. Publish shared packages to npm and reference them from skill script `package.json` files with semver ranges. Do not vendor shared packages into `skills/*/scripts/vendor/`.
+`packages/` is the source of truth for shared runtime code. Most skills consume shared packages from npm with semver ranges. `baoyu-url-to-markdown` is the exception: it vendors the `baoyu-fetch` runtime into `skills/baoyu-url-to-markdown/scripts/lib/` so the published skill is self-contained and does not depend on the `baoyu-fetch` npm package.
 
 Current packages:
 - `baoyu-chrome-cdp` (Chrome CDP utilities), consumed by 5 skills (`baoyu-danger-gemini-web`, `baoyu-danger-x-to-markdown`, `baoyu-post-to-wechat`, `baoyu-post-to-weibo`, `baoyu-post-to-x`)
 - `baoyu-md` (shared Markdown rendering and placeholder pipeline), consumed by 3 skills (`baoyu-markdown-to-html`, `baoyu-post-to-wechat`, `baoyu-post-to-weibo`)
-- `baoyu-fetch` (URL-to-Markdown CLI), consumed by 1 skill (`baoyu-url-to-markdown`)
+- `baoyu-fetch` (URL-to-Markdown CLI), vendored into 1 skill (`baoyu-url-to-markdown`)
 
-**How it works**: npm packages are built from `packages/` and published to the public npm registry. Skills depend on those packages with `^<version>` specs. Release prep runs `node scripts/verify-shared-package-deps.mjs` so `file:` dependencies and vendored workspace packages cannot slip back in.
+**How it works**: npm packages are built from `packages/` and published to the public npm registry. Skills normally depend on those packages with `^<version>` specs. Release prep runs `node scripts/verify-shared-package-deps.mjs` so accidental `file:` dependencies cannot slip back in. For vendored skill runtimes, keep the copied code under the skill directory and run `node scripts/publish-skill.mjs --skill-dir <skill> --version <version> --dry-run` before publishing.
 
 **Update workflow**:
 1. Edit package under `packages/`

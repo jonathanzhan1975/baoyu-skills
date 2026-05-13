@@ -4,6 +4,18 @@
 
 格式参考 Keep a Changelog，版本号遵循 Semantic Versioning。
 
+## [0.1.2] - 2026-04-21
+
+### 变更
+
+- 将 Defuddle 升级到 0.17.0、jsdom 升级到 29.0.2，用于通用页面提取。
+- 新增 `@xmldom/xmldom` override，使 Defuddle 的可选 MathML 依赖链保持在无漏洞版本。
+
+### 修复
+
+- 修复 X/Twitter 单条内容和 X Article 的视频提取逻辑，改为选择最高码率 MP4 变体，而不是预览图 URL。
+- 修复 X Article 媒体渲染，视频实体现在输出为 `[video](...)` 链接，而不是图片嵌入。
+
 ## [0.1.1] - 2026-03-27
 
 ### 新增

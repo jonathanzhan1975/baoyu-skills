@@ -714,7 +714,7 @@ AI 驱动的生成后端。
 
 #### baoyu-imagine
 
-基于 AI SDK 的图像生成，支持 OpenAI、Azure OpenAI、Google、OpenRouter、DashScope（阿里通义万相）、MiniMax、即梦（Jimeng）、豆包（Seedream）和 Replicate API。支持文生图、参考图、宽高比、自定义尺寸、批量生成和质量预设。
+基于 AI SDK 的图像生成，支持 OpenAI GPT Image 2、Azure OpenAI、Google、OpenRouter、DashScope（阿里通义万相）、MiniMax、即梦（Jimeng）、豆包（Seedream）和 Replicate API。支持文生图、参考图、宽高比、自定义尺寸、批量生成和质量预设。
 
 ```bash
 # 基础生成（自动检测服务商）
@@ -727,10 +727,10 @@ AI 驱动的生成后端。
 /baoyu-imagine --prompt "横幅图" --image banner.png --quality 2k
 
 # 指定服务商
-/baoyu-imagine --prompt "一只猫" --image cat.png --provider openai
+/baoyu-imagine --prompt "一只猫" --image cat.png --provider openai --model gpt-image-2
 
 # Azure OpenAI（model 为部署名称）
-/baoyu-imagine --prompt "一只猫" --image cat.png --provider azure --model gpt-image-1.5
+/baoyu-imagine --prompt "一只猫" --image cat.png --provider azure --model gpt-image-2
 
 # OpenRouter
 /baoyu-imagine --prompt "一只猫" --image cat.png --provider openrouter
@@ -786,7 +786,7 @@ AI 驱动的生成后端。
 | `--provider` | `google`、`openai`、`azure`、`openrouter`、`dashscope`、`zai`、`minimax`、`jimeng`、`seedream` 或 `replicate` |
 | `--model`, `-m` | 模型 ID 或部署名。Azure 使用部署名；OpenRouter 使用完整模型 ID；Z.AI 使用 `glm-image`；MiniMax 使用 `image-01` / `image-01-live` |
 | `--ar` | 宽高比（如 `16:9`、`1:1`、`4:3`） |
-| `--size` | 尺寸（如 `1024x1024`） |
+| `--size` | 尺寸（如 `1024x1024`；`gpt-image-2` 支持最长边不超过 3840px 的有效自定义尺寸） |
 | `--quality` | `normal` 或 `2k`（默认：`2k`） |
 | `--imageSize` | Google/OpenRouter 使用的 `1K`、`2K`、`4K` |
 | `--imageApiDialect` | OpenAI 兼容网关的图像 API 方言（`openai-native` 或 `ratio-metadata`） |
@@ -810,9 +810,9 @@ AI 驱动的生成后端。
 | `JIMENG_ACCESS_KEY_ID` | 即梦火山引擎 Access Key | - |
 | `JIMENG_SECRET_ACCESS_KEY` | 即梦火山引擎 Secret Key | - |
 | `ARK_API_KEY` | 豆包火山引擎 ARK API 密钥 | - |
-| `OPENAI_IMAGE_MODEL` | OpenAI 模型 | `gpt-image-1.5` |
+| `OPENAI_IMAGE_MODEL` | OpenAI 模型 | `gpt-image-2` |
 | `AZURE_OPENAI_DEPLOYMENT` | Azure 默认部署名 | - |
-| `AZURE_OPENAI_IMAGE_MODEL` | 兼容旧配置的 Azure 部署/模型别名 | `gpt-image-1.5` |
+| `AZURE_OPENAI_IMAGE_MODEL` | 兼容旧配置的 Azure 部署/模型别名 | `gpt-image-2` |
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter 模型 | `google/gemini-3.1-flash-image-preview` |
 | `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `qwen-image-2.0-pro` |
@@ -834,7 +834,7 @@ AI 驱动的生成后端。
 | `DASHSCOPE_BASE_URL` | 自定义 DashScope 端点 | - |
 | `ZAI_BASE_URL` | 自定义 Z.AI 端点 | `https://api.z.ai/api/paas/v4` |
 | `BIGMODEL_BASE_URL` | Z.AI 端点向后兼容别名 | - |
-| `MINIMAX_BASE_URL` | 自定义 MiniMax 端点 | `https://api.minimax.io` |
+| `MINIMAX_BASE_URL` | 自定义 MiniMax 端点 | `https://api.minimaxi.com` |
 | `REPLICATE_BASE_URL` | 自定义 Replicate 端点 | - |
 | `JIMENG_BASE_URL` | 自定义即梦端点 | `https://visual.volcengineapi.com` |
 | `JIMENG_REGION` | 即梦区域 | `cn-north-1` |
@@ -1132,14 +1132,14 @@ mkdir -p ~/.baoyu-skills
 cat > ~/.baoyu-skills/.env << 'EOF'
 # OpenAI
 OPENAI_API_KEY=sk-xxx
-OPENAI_IMAGE_MODEL=gpt-image-1.5
+OPENAI_IMAGE_MODEL=gpt-image-2
 # OPENAI_BASE_URL=https://api.openai.com/v1
 # OPENAI_IMAGE_USE_CHAT=false
 
 # Azure OpenAI
 AZURE_OPENAI_API_KEY=xxx
 AZURE_OPENAI_BASE_URL=https://your-resource.openai.azure.com
-AZURE_OPENAI_DEPLOYMENT=gpt-image-1.5
+AZURE_OPENAI_DEPLOYMENT=gpt-image-2
 # AZURE_API_VERSION=2025-04-01-preview
 
 # OpenRouter
@@ -1167,7 +1167,7 @@ ZAI_IMAGE_MODEL=glm-image
 # MiniMax
 MINIMAX_API_KEY=xxx
 MINIMAX_IMAGE_MODEL=image-01
-# MINIMAX_BASE_URL=https://api.minimax.io
+# MINIMAX_BASE_URL=https://api.minimaxi.com
 
 # Replicate
 REPLICATE_API_TOKEN=r8_xxx

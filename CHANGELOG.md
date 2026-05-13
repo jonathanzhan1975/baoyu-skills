@@ -2,6 +2,93 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.115.4 - 2026-05-11
+
+### Documentation
+- Image generation backend selection: emphasize Codex `imagegen` as the priority runtime-native tool (invoke via the `Skill` tool with `skill: "imagegen"`) and forbid SVG/HTML/canvas substitution when no raster backend can be resolved — fall through to asking the user instead of silently emitting code-based art. Updated in `docs/image-generation-tools.md` and inlined into `baoyu-article-illustrator`, `baoyu-comic`, `baoyu-cover-image`, `baoyu-image-cards`, `baoyu-infographic`, `baoyu-slide-deck`, and `baoyu-xhs-images`.
+
+## 1.115.3 - 2026-05-11
+
+### Fixes
+- `baoyu-post-to-wechat`: ensure tab activation before copy/paste in WeChat editor (by @fengxiaodong28)
+- `baoyu-post-to-x`: use toolbar media upload instead of image clipboard paste for X Articles
+
+## 1.115.2 - 2026-05-10
+
+### Fixes
+- `baoyu-post-to-x`: honor explicit Codex Chrome plugin requests as a distinct browser-control mode, keep Chrome Computer Use and CDP fallbacks from silently taking over, and improve X Articles draft creation detection.
+
+## 1.115.1 - 2026-05-10
+
+### Fixes
+- `baoyu-imagine`: change the default MiniMax image API endpoint to `https://api.minimaxi.com` to match the current official image generation documentation, while keeping `https://api.minimax.io` available through `MINIMAX_BASE_URL` overrides.
+- `baoyu-image-gen`: sync the deprecated image-generation entrypoint with the same MiniMax default endpoint and regression coverage.
+
+## 1.115.0 - 2026-05-09
+
+### Features
+- `baoyu-post-to-x`: add Chrome Computer Use as the preferred execution mode in Codex. When Computer Use tools are available, all X UI actions (compose, article, quote, video) go through the user's real Chrome window instead of CDP scripts. CDP scripts become a fallback when Computer Use is unavailable or explicitly not requested.
+
+## 1.114.1 - 2026-05-08
+
+### Fixes
+- `baoyu-danger-gemini-web`: restore generated-image extraction for current Gemini Web responses where image URLs appear as `https://lh3.googleusercontent.com/gg-dl/` without the legacy generated-image markers. Adds regression coverage for the fallback response shape. (by @evilstar2016)
+
+## 1.114.0 - 2026-05-05
+
+### Features
+- `baoyu-infographic`: add `retro-popup-pop` style — retro pixel popup × pop-art collage. Renders content as a stack of 80/90s desktop popup windows (title bars, close buttons, ERROR / ALERT dialogs, file windows like `PROBLEMS.EXE`, progress bars, OK / CANCEL / FIX IT buttons) with thick black outlines, flat color fills, and bright cyan (#12B8DE) or vintage cream (#F5F0E6) backgrounds. Pairs especially well with the `dense-modules` layout; promoted as a recommended style for the `高密度信息大图` keyword shortcut and the `Product/Buying Guide` content type. Style Gallery count goes from 21 to 22.
+  Credit to AJ@WaytoAGI.
+
+### Documentation
+- `release-skills`: document GitHub Release publishing in the release workflow, including release-notes extraction from changelog sections, annotated tag creation, `gh release create/edit`, and historical release backfill for existing tags.
+
+## 1.113.0 - 2026-04-25
+
+### Features
+- `baoyu-imagine`: add DashScope Wan 2.7 image model support (`wan2.7-image-pro` and `wan2.7-image`) directly through the official Aliyun (Bailian) API. Supports text-to-image, image editing, and multi-image fusion with up to 9 reference images, with documented `[1:8, 8:1]` aspect ratio validation and per-mode pixel-budget rules. Forces `parameters.n: 1` to match baoyu-imagine's single-image save semantics and explicitly rejects `--n > 1` to prevent silent multi-image billing (the API defaults to `n=4` in non-collage mode). Allows `--provider dashscope --ref ...` opt-in for Wan 2.7 reference workflows.
+
+## 1.112.0 - 2026-04-24
+
+### Features
+- `baoyu-article-illustrator`: make `hand-drawn-edu` (infographic + sketch-notes + macaron) the universal fallback preset when content analysis surfaces no strong signal — warm cream paper, black hand-drawn lines, soft pastel section blocks. Elevate `sketch-notes` to primary style across infographic / flowchart / comparison / framework auto-selection; rewrite the sketch-notes style spec (macaron palette, canonical single-page layout, diagram-only rule); add matching prompt block and workflow defaults.
+- `baoyu-article-illustrator`: add `hand-drawn-edu-flow` (flowchart) and `hand-drawn-edu-compare` (comparison) presets for the same warm educational style.
+
+### Breaking Changes
+- `baoyu-article-illustrator`: `hand-drawn-edu` preset now maps to `infographic` instead of `flowchart`. Users relying on the previous flowchart behavior should switch to the new `hand-drawn-edu-flow` preset.
+
+### Fixes
+- `baoyu-post-to-x`: add entry point guard to `scripts/md-to-html.ts` so that importing `parseMarkdown` from `x-article.ts` no longer triggers the CLI entry point. Mirrors the same fix applied to `baoyu-post-to-weibo`.
+
+## 1.111.1 - 2026-04-21
+
+### Documentation
+- Add a top-level `## Confirmation Policy` section to every image-generating skill (`baoyu-infographic`, `baoyu-cover-image`, `baoyu-slide-deck`, `baoyu-image-cards`, `baoyu-xhs-images`, `baoyu-article-illustrator`) as a single source of truth: explicit skill invocation, keyword shortcuts, EXTEND.md defaults, and auto-recommendations are recommendation inputs only — they never authorize skipping the confirmation step. Opt-out requires an explicit current-request signal (`--no-confirm` / `--quick` / `--yes` / "直接生成" / equivalent).
+- `baoyu-infographic`: consolidate the scattered reminders (previously repeated across Step 5, Step 6, Default combination, Keyword Shortcuts, and the preferences docs) into a single policy section referenced from Step 4's hard gate.
+
+## 1.111.0 - 2026-04-21
+
+### Refactor
+- Unify image-backend resolution across all image-consuming skills (`baoyu-infographic`, `baoyu-comic`, `baoyu-cover-image`, `baoyu-image-cards`, `baoyu-article-illustrator`, `baoyu-slide-deck`, `baoyu-xhs-images`): add a single `preferred_image_backend` preference field (`auto | ask | <backend-id>`) and replace the stateless ask-once rule with a 4-step resolution (current-request override → saved preference → auto-select → ask). Runtime-native tools (Codex `imagegen`, Hermes `image_generate`) are preferred by default; existing `EXTEND.md` files without the field are treated as `auto` with no schema bump.
+- Add a top-level `## Changing Preferences` section to each image-consuming skill as a first-class surface for pinning the backend and editing common one-line preferences.
+
+## 1.110.0 - 2026-04-21
+
+### Features
+- `baoyu-imagine`: add `gpt-image-2` support for OpenAI image generation and edits, make it the default OpenAI model, and document the official size/quality mapping, custom-size constraints, and Azure deployment guidance
+
+## 1.109.0 - 2026-04-21
+
+### Features
+- `baoyu-url-to-markdown`: vendor the `baoyu-fetch` runtime into `scripts/lib` and run it through a local `scripts/baoyu-fetch` CLI so published skill installs are self-contained
+
+### Fixes
+- `baoyu-fetch`: extract playable X/Twitter video MP4 variants for single posts and X Articles, choosing the highest-bitrate MP4 and rendering article videos as `[video](...)`
+- `sync-clawhub`: publish from the shared release file list so extensionless CLI entrypoints, `bun.lock`, and vendored `scripts/lib` files are uploaded
+
+### Maintenance
+- Upgrade `defuddle` to 0.17.0 and `jsdom` to 29.0.2; override `@xmldom/xmldom` to 0.8.13 to keep the Defuddle dependency chain vulnerability-free
+
 ## 1.108.0 - 2026-04-19
 
 ### Refactor
@@ -636,7 +723,7 @@ English | [中文](./CHANGELOG.zh.md)
 - `baoyu-format-markdown`: add reader-perspective content analysis phase — analyzes highlights, structure, and formatting issues before applying formatting
 - `baoyu-format-markdown`: restructure workflow from 8 steps to 7 with explicit do/don't formatting principles and completion report
 - `baoyu-translate`: extract Step 2 workflow mechanics to separate reference file for cleaner SKILL.md
-- `baoyu-translate`: expand trigger keywords (改成中文, 快翻, 本地化, etc.) for better skill activation
+- `baoyu-translate`: expand trigger keywords (改成中文，快翻，本地化，etc.) for better skill activation
 - `baoyu-translate`: add proactive warning for long content in quick mode
 - `baoyu-translate`: save frontmatter to `chunks/frontmatter.md` during chunking
 

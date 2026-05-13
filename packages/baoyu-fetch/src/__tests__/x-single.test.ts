@@ -184,4 +184,77 @@ describe("x single tweet extraction", () => {
         "Quoted Author (@quoted_author)\n\nQuoted tweet text\n\nphoto: https://pbs.twimg.com/media/quoted?format=jpg&name=4096x4096",
     });
   });
+
+  test("uses the highest bitrate mp4 variant for tweet video media", () => {
+    const payload = {
+      data: {
+        tweetResult: {
+          result: {
+            rest_id: "2046628728210350366",
+            legacy: {
+              full_text: "Video post https://t.co/video",
+              favorite_count: 12,
+              retweet_count: 3,
+              reply_count: 1,
+              created_at: "Tue Apr 21 16:34:47 +0000 2026",
+              extended_entities: {
+                media: [
+                  {
+                    type: "video",
+                    media_url_https: "https://pbs.twimg.com/amplify_video_thumb/2046627051822530560/img/poster.jpg",
+                    url: "https://t.co/video",
+                    video_info: {
+                      variants: [
+                        {
+                          content_type: "application/x-mpegURL",
+                          url: "https://video.twimg.com/amplify_video/2046627051822530560/pl/playlist.m3u8",
+                        },
+                        {
+                          bitrate: 256000,
+                          content_type: "video/mp4",
+                          url: "https://video.twimg.com/amplify_video/2046627051822530560/vid/avc1/480x270/low.mp4",
+                        },
+                        {
+                          bitrate: 10368000,
+                          content_type: "video/mp4",
+                          url: "https://video.twimg.com/amplify_video/2046627051822530560/vid/avc1/1920x1080/high.mp4",
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+            core: {
+              user_results: {
+                result: {
+                  legacy: {
+                    name: "Google AI Studio",
+                    screen_name: "GoogleAIStudio",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const document = extractSingleTweetDocumentFromPayload(
+      payload,
+      "2046628728210350366",
+      "https://x.com/GoogleAIStudio/status/2046628728210350366",
+    );
+
+    expect(document).not.toBeNull();
+
+    const listBlock = document?.content.find((block) => block.type === "list");
+    expect(listBlock).toEqual({
+      type: "list",
+      ordered: false,
+      items: [
+        "video: https://video.twimg.com/amplify_video/2046627051822530560/vid/avc1/1920x1080/high.mp4",
+      ],
+    });
+  });
 });
