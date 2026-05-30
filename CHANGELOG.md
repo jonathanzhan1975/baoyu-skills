@@ -2,6 +2,171 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 2.4.0 - 2026-05-29
+
+### Features
+- `baoyu-wechat-summary`: add an `@bot` Q&A section to both the normal and roast digests. Messages mentioning `@bot` / `@精华bot` (customizable via the new `bot_aliases` preference) are detected during the skeleton pass and answered in a dedicated section — earnest and helpful in the normal version, snarky-but-substantive in the roast version. Answers draw only on the chat context and the model's own knowledge (no web access) and honestly flag anything that needs real-time data
+
+## 2.3.0 - 2026-05-28
+
+### Features
+- `baoyu-md`, `baoyu-markdown-to-html`, `baoyu-post-to-wechat`, `baoyu-post-to-x`: support Obsidian image wikilinks (`![[...]]`) alongside standard Markdown images, preserve mixed image order, and resolve Obsidian's default `Attachments/` paths (by @zcqqq)
+
+### Fixes
+- `baoyu-md`, `baoyu-post-to-x`: decode URL-encoded local image paths before resolution so filenames with spaces or CJK characters are handled correctly (by @zcqqq)
+- `baoyu-md`, `baoyu-post-to-x`: harden decoded image path handling so malformed percent escapes fall back safely instead of breaking placeholder extraction (by @zcqqq)
+
+## 2.2.1 - 2026-05-26
+
+### Documentation
+- `baoyu-image-gen`: surface `scripts/build-batch.ts` in SKILL.md's Usage section so the `outline.md` + `prompts/` → `batch.json` workflow (e.g., `baoyu-article-illustrator` output) is discoverable next to `--batchfile`. Clarify that all `scripts/...` paths in SKILL.md are relative to `{baseDir}` and point the Generation Mode table at `{baseDir}/scripts/build-batch.ts`. Update `build-batch.ts --help` to print `bun` / `npx -y bun` invocations with the `{baseDir}/scripts/...` layout used by the rest of the skill
+
+## 2.2.0 - 2026-05-25
+
+### Features
+- `baoyu-image-gen`: new `codex-cli` provider that wraps the `codex-imagegen` backend so the Codex `image_gen` tool is reachable through the standard `--provider` / batch / EXTEND.md flow. Uses the user's Codex subscription — no `OPENAI_API_KEY` required. Adds env vars `BAOYU_CODEX_IMAGEGEN_{BIN,CACHE_DIR,TIMEOUT_MS,RETRIES,LOG_FILE}` and resolves hyphenated provider names for `BAOYU_IMAGE_GEN_<PROVIDER>_*` overrides (e.g., `BAOYU_IMAGE_GEN_CODEX_CLI_CONCURRENCY`). `codex-cli` is never auto-selected — pin via `--provider codex-cli` or `default_provider: codex-cli` in EXTEND.md
+
+### Refactor
+- `codex-imagegen`: extracted from `scripts/codex-imagegen/` + `scripts/codex-imagegen.sh` to its own workspace package at `packages/baoyu-codex-imagegen/`. The bash shim is gone; `src/main.ts` now carries a `#!/usr/bin/env bun` shebang and is the sole entrypoint (`bun packages/baoyu-codex-imagegen/src/main.ts …` or, without bun on `PATH`, `npx -y bun …`). `scripts/sync-codex-imagegen.sh` keeps `skills/baoyu-image-gen/scripts/codex-imagegen/` in sync for skill self-containment
+
+### Documentation
+- `baoyu-cover-image`: replace the long inline `scripts/codex-imagegen.sh` invocation block in `SKILL.md` with a pointer to `references/codex-imagegen.md`, documenting the preferred `baoyu-image-gen --provider codex-cli` path and keeping the direct-wrapper fallback
+- `baoyu-article-illustrator`, `baoyu-comic`, `baoyu-infographic`, `baoyu-slide-deck`, `baoyu-xhs-images`: add a `Codex via codex exec` branch to each skill's backend-selection ladder and ship a per-skill `references/codex-imagegen.md` with the invocation contract (preferred path, fallback, stdout schema, batch semantics)
+- `docs/codex-imagegen-backend.md` and `CLAUDE.md`: update path layout and invocation examples to reflect the new workspace package location
+
+## 2.1.0 - 2026-05-24
+
+### Features
+- `baoyu-markdown-to-html`: render fenced ` ```mermaid ` code blocks to local PNG via shared Chrome (CDP) before the standard image-placeholder pipeline runs. New CLI flags: `--mermaid-theme <default|forest|dark|neutral|base>`, `--mermaid-scale <N>` (default `2` for @2x resolution), `--mermaid-bg <white|transparent|#hex>`, and `--no-mermaid` to disable rendering. Generated images land in `imgs/.mermaid-cache/mermaid-<hash>.png` and are deduplicated/reused across runs by a 12-char SHA-256 over `(code, theme, scale, background, mermaid version)`. The browser-side `<pre class="mermaid">` path is retained as a graceful fallback when Chrome is unavailable or a single block fails to render
+- `baoyu-post-to-wechat`, `baoyu-post-to-weibo`, `baoyu-post-to-x`: cascade the same Mermaid → PNG preprocessing into the WeChat / Weibo / X publishing pipelines so diagrams appear as real images in the published posts (previously they fell through as unrendered `<pre>` blocks). Existing `WECHATIMGPH_*` / `WBIMGPH_*` / `XIMGPH_*` placeholder pipelines pick up the generated PNGs unchanged
+- `baoyu-md` package: new exports `preprocessMermaidInMarkdown`, `extractMermaidBlocks`, `replaceMermaidBlocks`, `hashMermaidCode`, and `MERMAID_VERSION` (skills inject the render function so the package stays Chrome-free)
+- `baoyu-chrome-cdp` package: new `./mermaid` subexport providing `renderMermaidToPng(code, outputPath, options)` backed by a process-singleton CDP connection that reuses the shared Chrome profile and ships the vendored Mermaid 10.9.1 UMD bundle as an asset
+
+## 2.0.1 - 2026-05-24
+
+### Fixes
+- `baoyu-post-to-wechat`: convert `newspic` (image-text) `content` from HTML to plain text before sending to the WeChat draft API. The previous behavior passed raw HTML, triggering error 45166 (invalid content) when multiple images pushed the body over WeChat's length limit. The new `htmlToPlainText` helper turns `<br>` and block-closing tags into line breaks, strips remaining tags, decodes named/numeric (decimal and hex) entities, and collapses whitespace (by @Go1dFinger, [#164](https://github.com/JimLiu/baoyu-skills/pull/164), closes [#163](https://github.com/JimLiu/baoyu-skills/issues/163))
+
+### Credits
+- `baoyu-post-to-wechat` newspic plain-text fix contributed by @Go1dFinger ([#164](https://github.com/JimLiu/baoyu-skills/pull/164))
+
+## 2.0.0 - 2026-05-24
+
+### Breaking
+- Removed `baoyu-imagine` skill. All functionality (providers, scripts, references) now lives under `baoyu-image-gen`. The skill is registered in `marketplace.json` under the new name and its `homepage` URL has changed to `#baoyu-image-gen`.
+- Removed `baoyu-image-cards` skill. All functionality (styles, layouts, palettes, presets) now lives under `baoyu-xhs-images`. The skill is registered in `marketplace.json` under the new name.
+- Cross-skill `## Image Generation Tools` examples in `baoyu-article-illustrator`, `baoyu-comic`, `baoyu-cover-image`, `baoyu-infographic`, and `baoyu-slide-deck` now reference `baoyu-image-gen` instead of `baoyu-imagine`.
+
+### Migration
+- Existing `~/.baoyu-skills/baoyu-imagine/EXTEND.md` and `.baoyu-skills/baoyu-imagine/EXTEND.md` configs are auto-renamed to `…/baoyu-image-gen/EXTEND.md` on first run via the legacy-path resolver in `scripts/main.ts`.
+- Users invoking the skill via slash command should switch from `/baoyu-imagine ...` to `/baoyu-image-gen ...` and from any `baoyu-image-cards` reference to `baoyu-xhs-images`.
+
+## 1.119.0 - 2026-05-24
+
+### Features
+- `baoyu-electron-extract`: new skill that extracts resources and JavaScript from any installed Electron app's `app.asar`. Restores original sources from embedded `sourcesContent` in `.js.map` files when present (TypeScript/JSX included) or formats minified JS/CSS with Prettier in place when not. Source-map paths are resolved relative to each `.js.map` file first, so bundler-relative entries like `../../src/main.ts` restore to readable paths under `restored/` instead of hashed placeholders. Always skips `node_modules` and `webpack/runtime/*` entries. Auto-discovers apps on macOS (`/Applications`, `~/Applications`) and Windows (`%LOCALAPPDATA%\Programs`, `%PROGRAMFILES%`, `%PROGRAMFILES(X86)%`, `%APPDATA%`); other platforms can pass `--asar <path>` explicitly. Safety: refuses to write to `/`, the user home, or the current working directory, and refuses non-empty existing output dirs without `--force`
+
+## 1.118.0 - 2026-05-21
+
+### Features
+- `codex-imagegen`: new image-generation backend for non-Codex runtimes (e.g., Claude Code) — spawns `codex exec --json --sandbox danger-full-access` and delegates to Codex CLI's built-in `image_gen` tool, so no `OPENAI_API_KEY` is required. Ships with idempotency cache, file-lock concurrency control, JSONL event-stream parsing, PNG magic-byte validation, and exponential-backoff retries (by @yelban, #158)
+- `baoyu-cover-image`: wire `SKILL.md` to call the `codex-imagegen` wrapper when `preferred_image_backend: codex-imagegen` is set, with `--timeout` documented for slow networks
+
+### Refactor
+- `codex-imagegen`: enforce `--prompt` / `--prompt-file` mutual exclusion in code (was docs-only)
+- `codex-imagegen`: replace `(opts as any).__promptFile` hack with a typed `promptFile` field on `CliOptions`
+- `codex-imagegen`: replace inline `cp|mv ... generated_images` regex with the shared `findCpToTarget` helper
+- `codex-imagegen`: propagate `attempts` on error responses (previously hardcoded to `0`)
+- `codex-imagegen`: drop dead `parseFinalJson()` + matching test (wrapper ignores agent-reported JSON in favor of disk verification)
+
+### Security
+- `codex-imagegen`: reject `--image` / `--ref` paths containing shell metacharacters before interpolating them into the agent instruction sent to `codex exec --sandbox danger-full-access`
+
+### Credits
+- `codex-imagegen` backend contributed by @yelban (#158)
+
+## 1.117.5 - 2026-05-21
+
+### Credits
+- `baoyu-post-to-wechat`: remote API publishing update credited to Dame5211 <1079825614@qq.com>
+
+## 1.117.4 - 2026-05-21
+
+### Features
+- `baoyu-post-to-wechat`: add remote API publishing via an SSH SOCKS5 tunnel
+
+### Fixes
+- `baoyu-post-to-wechat`: make remote API publishing work under Bun and strictly validate remote publish config
+
+### CI
+- Install `baoyu-post-to-wechat` script dependencies before running tests
+
+## 1.117.3 - 2026-05-20
+
+### Features
+- CI: add skill release commit validation — commits touching `skills/<name>/**` must use Conventional Commit subjects; SKILL.md version validated during publish/sync
+
+### Fixes
+- `baoyu-diagram`: add version field to SKILL.md
+- `baoyu-post-to-wechat`: sync SKILL.md version
+
+### Documentation
+- `baoyu-wechat-summary`: restructure profile fields — split `aliases` into `group_nicknames` (user's own prior names) and `aliases` (nicknames from other members), add `tags` for cross-cutting attributes
+
+## 1.117.2 - 2026-05-17
+
+### Documentation
+- `baoyu-cover-image`: ban programmatic text repair on generated bitmaps — disallow ImageMagick / Pillow / Canvas / SVG / HTML overlays to cover, rewrite, or replace title/subtitle text; regenerate from a corrected prompt or switch to a lower-text or no-title variant instead
+- `baoyu-article-illustrator`, `baoyu-comic`, `baoyu-image-cards`, `baoyu-xhs-images`, `baoyu-infographic`, `baoyu-slide-deck`: sync the same text-repair ban with skill-specific text categories (labels/captions, dialogue/sound effects, titles/body/tags, headings/data values, slide titles/bullets)
+
+## 1.117.1 - 2026-05-16
+
+### Fixes
+- `baoyu-post-to-wechat`: fix WeChat browser article publishing (by @zhangga)
+- `baoyu-post-to-wechat`: fix image upload fallback and WebP clipboard copy on macOS
+
+## 1.117.0 - 2026-05-16
+
+### Features
+- `baoyu-article-illustrator`: add batch generation policy — backend native batch first, runtime parallel calls second, sequential fallback; configurable `generation_batch_size` and `--batch-size` option
+- `baoyu-comic`: add batch generation policy with dependency-aware ordering (character sheet before pages) and configurable `--batch-size`
+- `baoyu-image-cards`: add batch generation policy honoring image-1 anchor chain, with configurable `--batch-size`
+- `baoyu-slide-deck`: add batch generation policy for slide image rendering with configurable `--batch-size`
+- `baoyu-xhs-images`: sync batch generation policy from baoyu-image-cards
+
+## 1.116.5 - 2026-05-14
+
+### Features
+- `baoyu-post-to-wechat`: send WeChat login QR code to Telegram when `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` env vars are set, enabling headless / remote login flows (by @beforesun)
+
+### Refactor
+- `baoyu-post-to-wechat`: harden Telegram QR notification — add 10s fetch timeout, defer the 2s QR-render wait until env vars are configured, and use viewport screenshot as fallback
+
+## 1.116.4 - 2026-05-14
+
+### Refactor
+- `baoyu-wechat-summary`: streamline roast version prompts in output-formats.md (99 → 23 lines), add roast-specific profile usage bullets to SKILL.md Round 2
+
+## 1.116.3 - 2026-05-13
+
+### Documentation
+- Replace Claude Code references with generic Agent wording in READMEs to reflect multi-agent support (Claude Code, Codex, etc.)
+
+## 1.116.2 - 2026-05-13
+
+### Documentation
+- `baoyu-wechat-summary`: update example group name in SKILL.md
+
+## 1.116.1 - 2026-05-13
+
+### Features
+- `baoyu-wechat-summary`: add `data_root` option to first-time setup flow, allowing users to customize the digest output directory during initialization
+
+## 1.116.0 - 2026-05-13
+
+### Features
+- Add `baoyu-wechat-summary` skill: summarize WeChat group chat highlights into structured digests with topic extraction, message leaderboards, and per-user profiles. Supports normal and roast (毒舌) versions, incremental mode, and profile backfill. Requires [wx-cli](https://github.com/jackwener/wx-cli).
+
 ## 1.115.4 - 2026-05-11
 
 ### Documentation

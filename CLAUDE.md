@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Claude Code marketplace plugin providing AI-powered content generation skills. Version: **1.107.0**.
+Claude Code marketplace plugin providing AI-powered content generation skills. Version: **2.0.0**.
 
 ## Architecture
 
@@ -31,7 +31,7 @@ Execute: `${BUN_X} skills/<skill>/scripts/main.ts [options]`
 
 - **Bun**: TypeScript runtime (`bun` preferred, fallback `npx -y bun`)
 - **Chrome**: Required for CDP-based skills (gemini-web, post-to-x/wechat/weibo, url-to-markdown). All CDP skills share a single profile, override via `BAOYU_CHROME_PROFILE_DIR` env var. Platform paths: [docs/chrome-profile.md](docs/chrome-profile.md)
-- **Image generation APIs**: `baoyu-imagine` requires API key (OpenAI, Azure OpenAI, Google, OpenRouter, DashScope, or Replicate) configured in EXTEND.md
+- **Image generation APIs**: `baoyu-image-gen` requires API key (OpenAI, Azure OpenAI, Google, OpenRouter, DashScope, or Replicate) configured in EXTEND.md
 - **Gemini Web auth**: Browser cookies (first run opens Chrome for login, `--login` to refresh)
 
 ## Security
@@ -64,14 +64,25 @@ Skills that prompt users for choices MUST declare the tool-selection convention 
 
 ## Image Generation Tools
 
-Skills that render images MUST declare the backend-selection convention **inline** in exactly one place per `SKILL.md` — a `## Image Generation Tools` section near the top (after `## User Input Tools`). Do NOT link out to [docs/image-generation-tools.md](docs/image-generation-tools.md); that doc is the author-side canonical source — copy its body into each SKILL.md. Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) elsewhere in a skill are treated as examples — other runtimes substitute their local equivalent under the rule. The rule is stateless: use whatever backend is available; if multiple, ask the user once; if none, ask how to proceed. Every rendered image's full prompt must be written to a standalone `prompts/NN-*.md` file before any backend is invoked. Backend skills (`baoyu-imagine`, `baoyu-image-gen`, `baoyu-danger-gemini-web`) are exempt — they render directly rather than selecting a backend.
+Skills that render images MUST declare the backend-selection convention **inline** in exactly one place per `SKILL.md` — a `## Image Generation Tools` section near the top (after `## User Input Tools`). Do NOT link out to [docs/image-generation-tools.md](docs/image-generation-tools.md); that doc is the author-side canonical source — copy its body into each SKILL.md. Concrete tool names (`imagegen`, `image_generate`, `baoyu-image-gen`) elsewhere in a skill are treated as examples — other runtimes substitute their local equivalent under the rule. The rule is stateless: use whatever backend is available; if multiple, ask the user once; if none, ask how to proceed. Every rendered image's full prompt must be written to a standalone `prompts/NN-*.md` file before any backend is invoked. Backend skills (`baoyu-image-gen`, `baoyu-danger-gemini-web`) are exempt — they render directly rather than selecting a backend.
 
-## Deprecated Skills
+### `codex-imagegen` Backend
 
-| Skill | Note |
-|-------|------|
-| `baoyu-image-gen` | Superseded by `baoyu-imagine`. Not in `.claude-plugin/marketplace.json`. Kept functional — sync any cross-cutting changes with `baoyu-imagine`. |
-| `baoyu-xhs-images` | Superseded by `baoyu-image-cards`. Not in `.claude-plugin/marketplace.json`. Kept functional — sync any cross-cutting changes with `baoyu-image-cards`. Do NOT update README for this skill. |
+A backend for non-Codex runtimes (e.g., Claude Code) that generates images by spawning `codex exec --json --sandbox danger-full-access` and delegating to Codex CLI's built-in `image_gen` tool. Uses the user's Codex subscription — no `OPENAI_API_KEY` required. Lives under [packages/baoyu-codex-imagegen](packages/baoyu-codex-imagegen) so it follows the same workspace layout as other shared packages.
+
+Invoke via (TS entrypoint with `#!/usr/bin/env bun` shebang):
+
+```bash
+bun packages/baoyu-codex-imagegen/src/main.ts \
+  --image <output.png> \
+  --prompt-file prompts/01-cover.md \
+  --aspect 16:9 \
+  --cache-dir ~/.cache/baoyu-codex-imagegen
+```
+
+Without bun installed: `npx -y bun packages/baoyu-codex-imagegen/src/main.ts …`.
+
+Stdout emits a single JSON line: `{"status":"ok","path":...,"bytes":N,...}`. On failure, `{"status":"error","error_kind":...}`. Skills route here by setting `preferred_image_backend: codex-imagegen` in EXTEND.md, or by running `baoyu-image-gen --provider codex-cli` (which spawns the same wrapper internally). Full reference: [docs/codex-imagegen-backend.md](docs/codex-imagegen-backend.md).
 
 ## Release Process
 

@@ -9,27 +9,33 @@ import { pathToFileURL } from "node:url";
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const packageDir = path.resolve(options.packageDir);
-  const entryPath = path.resolve(packageDir, options.entry);
   const outDir = path.resolve(packageDir, options.outDir);
 
   await fs.rm(outDir, { recursive: true, force: true });
   await fs.mkdir(outDir, { recursive: true });
 
   const bun = resolveBunRuntime();
-  runBuild(bun, {
-    entryPath,
-    external: options.external,
-    format: "esm",
-    outfile: path.join(outDir, "index.js"),
-  });
-  const cjsOutfile = path.join(outDir, "index.cjs");
-  runBuild(bun, {
-    entryPath,
-    external: options.external,
-    format: "cjs",
-    outfile: cjsOutfile,
-  });
-  await scrubCommonJsSourceFileUrls(cjsOutfile, packageDir);
+  const entries = options.entries.length > 0
+    ? options.entries
+    : [{ source: options.entry, name: "index" }];
+
+  for (const entry of entries) {
+    const entryPath = path.resolve(packageDir, entry.source);
+    runBuild(bun, {
+      entryPath,
+      external: options.external,
+      format: "esm",
+      outfile: path.join(outDir, `${entry.name}.js`),
+    });
+    const cjsOutfile = path.join(outDir, `${entry.name}.cjs`);
+    runBuild(bun, {
+      entryPath,
+      external: options.external,
+      format: "cjs",
+      outfile: cjsOutfile,
+    });
+    await scrubCommonJsSourceFileUrls(cjsOutfile, packageDir);
+  }
 
   for (const asset of options.assets) {
     const source = path.resolve(packageDir, asset.source);
@@ -45,6 +51,7 @@ function parseArgs(argv) {
     outDir: "dist",
     external: [],
     assets: [],
+    entries: [],
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -55,6 +62,10 @@ function parseArgs(argv) {
     }
     if (arg === "--entry") {
       options.entry = readArgValue(argv, ++index, arg);
+      continue;
+    }
+    if (arg === "--entry-out") {
+      options.entries.push(parseEntryOutArg(readArgValue(argv, ++index, arg)));
       continue;
     }
     if (arg === "--out-dir") {
@@ -77,6 +88,14 @@ function parseArgs(argv) {
   }
 
   return options;
+}
+
+function parseEntryOutArg(value) {
+  const [source, name] = value.split(":");
+  if (!source || !name) {
+    throw new Error(`Invalid --entry-out value: ${value} (expected <source>:<name>)`);
+  }
+  return { source, name };
 }
 
 function readArgValue(argv, index, flag) {
@@ -153,12 +172,13 @@ function printUsage() {
   console.log(`Usage: build-shared-package.mjs [options]
 
 Options:
-  --package-dir <dir>  Package root (default: current directory)
-  --entry <file>       Entry file relative to package root (default: src/index.ts)
-  --out-dir <dir>     Output directory relative to package root (default: dist)
-  --external <name>   Leave a module external (can be repeated)
-  --asset <src[:dst]> Copy an asset directory/file into out-dir (can be repeated)
-  -h, --help          Show help`);
+  --package-dir <dir>     Package root (default: current directory)
+  --entry <file>          Entry file relative to package root (default: src/index.ts)
+  --entry-out <src:name>  Add an entry that emits <name>.js / <name>.cjs (repeatable)
+  --out-dir <dir>         Output directory relative to package root (default: dist)
+  --external <name>       Leave a module external (can be repeated)
+  --asset <src[:dst]>     Copy an asset directory/file into out-dir (can be repeated)
+  -h, --help              Show help`);
 }
 
 main().catch((error) => {

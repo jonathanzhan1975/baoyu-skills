@@ -2,7 +2,7 @@
 
 English | [中文](./README.zh.md)
 
-Skills shared by Baoyu for improving daily work efficiency with Claude Code.
+Skills shared by Baoyu for improving daily work efficiency with AI Agents (Claude Code, Codex, etc.).
 
 ## Prerequisites
 
@@ -10,6 +10,8 @@ Skills shared by Baoyu for improving daily work efficiency with Claude Code.
 - Ability to run `npx bun` commands
 
 ## Installation
+
+> **Tip**: This repository contains 20+ skills. Install only the ones you actually need — bulk-installing every skill adds unnecessary context overhead for your AI agent on every run.
 
 ### Quick Install (Recommended)
 
@@ -32,7 +34,7 @@ This repository now supports publishing each `skills/baoyu-*` directory as an in
 ClawHub installs skills individually, not as one marketplace bundle. After publishing, users can install specific skills such as:
 
 ```bash
-clawhub install baoyu-imagine
+clawhub install baoyu-image-gen
 clawhub install baoyu-markdown-to-html
 ```
 
@@ -40,7 +42,7 @@ Publishing to ClawHub releases the published skill under `MIT-0`, per ClawHub's 
 
 ### Register as Plugin Marketplace
 
-Run the following command in Claude Code:
+Run the following command in the Agent:
 
 ```bash
 /plugin marketplace add JimLiu/baoyu-skills
@@ -64,7 +66,7 @@ Run the following command in Claude Code:
 
 **Option 3: Ask the Agent**
 
-Simply tell Claude Code:
+Simply tell the Agent:
 
 > Please install Skills from github.com/JimLiu/baoyu-skills
 
@@ -80,7 +82,7 @@ The marketplace now exposes a single plugin so each skill is registered exactly 
 
 To update skills to the latest version:
 
-1. Run `/plugin` in Claude Code
+1. Run `/plugin` in the Agent
 2. Switch to **Marketplaces** tab (use arrow keys or Tab)
 3. Select **baoyu-skills**
 4. Choose **Update marketplace**
@@ -579,7 +581,7 @@ Plain text input is treated as a regular post. Markdown files are treated as X A
 
 ```bash
 # Post with text
-/baoyu-post-to-x "Hello from Claude Code!"
+/baoyu-post-to-x "Hello from AI Agent!"
 
 # Post with images
 /baoyu-post-to-x "Check this out" --image photo.png
@@ -612,8 +614,9 @@ Post content to WeChat Official Account (微信公众号). Two modes available:
 
 | Method | Speed | Requirements |
 |--------|-------|--------------|
-| API (Recommended) | Fast | API credentials |
+| API (Recommended) | Fast | API credentials (local IP allowlisted in WeChat) |
 | Browser | Slow | Chrome, login session |
+| Remote API | Fast | API credentials + SSH-reachable server whose IP is on WeChat's allowlist |
 
 **API Configuration** (for faster publishing):
 
@@ -630,6 +633,17 @@ To obtain credentials:
 4. Add your machine's IP to the whitelist
 
 **Browser Method** (no API setup needed): Requires Google Chrome. First run opens browser for QR code login (session preserved).
+
+**Remote API Method** (for when WeChat's IP allowlist excludes your local machine): tunnels WeChat API calls through an SSH SOCKS5 dynamic port forward to a server whose IP is on the allowlist. No files are written to the remote host and `AppSecret` never leaves the local process. Add to your EXTEND.md:
+
+```yaml
+# Optional: only set when WeChat's IP allowlist excludes your local machine
+remote_publish_host: server.example.com
+remote_publish_user: deploy
+remote_publish_identity_file: ~/.ssh/id_ed25519
+```
+
+Then publish with `--remote` (or set `default_publish_method: remote-api`). Authentication is SSH key only; only the typed `remote_publish_*` keys are honored.
 
 **Multi-Account Support**: Manage multiple WeChat Official Accounts via `EXTEND.md`:
 
@@ -712,67 +726,67 @@ Post content to Weibo (微博). Supports regular posts with text, images, and vi
 
 AI-powered generation backends.
 
-#### baoyu-imagine
+#### baoyu-image-gen
 
 AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, DashScope (Aliyun Tongyi Wanxiang), MiniMax, Jimeng (即梦), Seedream (豆包), and Replicate APIs. Supports text-to-image, reference images, aspect ratios, custom sizes, batch generation, and quality presets.
 
 ```bash
 # Basic generation (auto-detect provider)
-/baoyu-imagine --prompt "A cute cat" --image cat.png
+/baoyu-image-gen --prompt "A cute cat" --image cat.png
 
 # With aspect ratio
-/baoyu-imagine --prompt "A landscape" --image landscape.png --ar 16:9
+/baoyu-image-gen --prompt "A landscape" --image landscape.png --ar 16:9
 
 # High quality (2k)
-/baoyu-imagine --prompt "A banner" --image banner.png --quality 2k
+/baoyu-image-gen --prompt "A banner" --image banner.png --quality 2k
 
 # Specific provider
-/baoyu-imagine --prompt "A cat" --image cat.png --provider openai --model gpt-image-2
+/baoyu-image-gen --prompt "A cat" --image cat.png --provider openai --model gpt-image-2
 
 # Azure OpenAI (model = deployment name)
-/baoyu-imagine --prompt "A cat" --image cat.png --provider azure --model gpt-image-2
+/baoyu-image-gen --prompt "A cat" --image cat.png --provider azure --model gpt-image-2
 
 # OpenRouter
-/baoyu-imagine --prompt "A cat" --image cat.png --provider openrouter
+/baoyu-image-gen --prompt "A cat" --image cat.png --provider openrouter
 
 # OpenRouter with reference images
-/baoyu-imagine --prompt "Make it blue" --image out.png --provider openrouter --model google/gemini-3.1-flash-image-preview --ref source.png
+/baoyu-image-gen --prompt "Make it blue" --image out.png --provider openrouter --model google/gemini-3.1-flash-image --ref source.png
 
 # DashScope (Aliyun Tongyi Wanxiang)
-/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider dashscope
+/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider dashscope
 
 # DashScope with custom size
-/baoyu-imagine --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
+/baoyu-image-gen --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
 
 # Z.AI GLM-Image
-/baoyu-imagine --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
+/baoyu-image-gen --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
 
 # MiniMax
-/baoyu-imagine --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
+/baoyu-image-gen --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
 
 # MiniMax with subject reference
-/baoyu-imagine --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
+/baoyu-image-gen --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
 
 # Replicate (default: google/nano-banana-2)
-/baoyu-imagine --prompt "A cat" --image cat.png --provider replicate
+/baoyu-image-gen --prompt "A cat" --image cat.png --provider replicate
 
 # Replicate Seedream 4.5
-/baoyu-imagine --prompt "A studio portrait" --image portrait.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
+/baoyu-image-gen --prompt "A studio portrait" --image portrait.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
 
 # Replicate Wan 2.7 Image Pro
-/baoyu-imagine --prompt "A concept frame" --image frame.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
+/baoyu-image-gen --prompt "A concept frame" --image frame.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
 
 # Jimeng (即梦)
-/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider jimeng
+/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider jimeng
 
 # Seedream (豆包)
-/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider seedream
+/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider seedream
 
 # With reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 5.0/4.5/4.0)
-/baoyu-imagine --prompt "Make it blue" --image out.png --ref source.png
+/baoyu-image-gen --prompt "Make it blue" --image out.png --ref source.png
 
 # Batch mode
-/baoyu-imagine --batchfile batch.json --jobs 4 --json
+/baoyu-image-gen --batchfile batch.json --jobs 4 --json
 ```
 
 **Options**:
@@ -813,8 +827,8 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `OPENAI_IMAGE_MODEL` | OpenAI model | `gpt-image-2` |
 | `AZURE_OPENAI_DEPLOYMENT` | Azure default deployment name | - |
 | `AZURE_OPENAI_IMAGE_MODEL` | Backward-compatible Azure deployment/model alias | `gpt-image-2` |
-| `OPENROUTER_IMAGE_MODEL` | OpenRouter model | `google/gemini-3.1-flash-image-preview` |
-| `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image-preview` |
+| `OPENROUTER_IMAGE_MODEL` | OpenRouter model | `google/gemini-3.1-flash-image` |
+| `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
 | `ZAI_IMAGE_MODEL` | Z.AI model | `glm-image` |
 | `BIGMODEL_IMAGE_MODEL` | Backward-compatible alias for Z.AI model | `glm-image` |
@@ -851,7 +865,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 - MiniMax reference images are sent as `subject_reference`; the current API is specialized toward character / portrait consistency.
 - Jimeng does not support reference images.
 - Seedream reference images are supported by Seedream 5.0 / 4.5 / 4.0, not Seedream 3.0.
-- Replicate defaults to `google/nano-banana-2`. `baoyu-imagine` only enables Replicate advanced options for `google/nano-banana*`, `bytedance/seedream-4.5`, `bytedance/seedream-5-lite`, `wan-video/wan-2.7-image`, and `wan-video/wan-2.7-image-pro`.
+- Replicate defaults to `google/nano-banana-2`. `baoyu-image-gen` only enables Replicate advanced options for `google/nano-banana*`, `bytedance/seedream-4.5`, `bytedance/seedream-5-lite`, `wan-video/wan-2.7-image`, and `wan-video/wan-2.7-image-pro`.
 - Replicate currently saves exactly one output image per request. `--n > 1` is blocked locally instead of silently dropping extra results.
 - Replicate model behavior is family-specific: nano-banana uses `--quality` / `--ar`, Seedream uses validated `--size` / `--ar`, and Wan uses validated `--size` (with `--ar` converted locally to a concrete size).
 
@@ -1112,12 +1126,79 @@ Custom style descriptions are also accepted, e.g., `--style "poetic and lyrical"
 - Translator's notes for cultural/domain-specific references
 - Output directory with all intermediate files preserved
 
+#### baoyu-wechat-summary
+
+Summarize WeChat group chat highlights into a structured digest. Extracts topics, quotes, and stats from group messages using [wx-cli](https://github.com/jackwener/wx-cli). Maintains per-group history and per-user profiles across runs. Supports normal and roast (毒舌) versions, and answers `@bot` questions raised in the chat.
+
+```bash
+# Summarize a group's recent messages
+/baoyu-wechat-summary 相亲相爱一家人 最近 1 天
+
+# Weekly summary
+/baoyu-wechat-summary AI 技术群 最近 7 天
+
+# Incremental (since last digest)
+/baoyu-wechat-summary 相亲相爱一家人
+
+# Roast version
+/baoyu-wechat-summary 相亲相爱一家人 最近 3 天 毒舌版
+```
+
+**Requirements**:
+- [wx-cli](https://github.com/jackwener/wx-cli) installed (`npm install -g @jackwener/wx-cli`)
+- WeChat 4.x running and logged in on macOS
+
+**Features**:
+- Topic extraction with attribution and quotes
+- Message leaderboard and per-user profiles
+- Incremental mode (picks up where last digest left off)
+- Multi-day range splitting for large batches
+- Normal and roast (毒舌) digest versions
+- Profile backfill from historical digests
+
+#### baoyu-electron-extract
+
+Extract resources and JavaScript from any installed Electron app's `app.asar`. When `.js.map` files embed `sourcesContent`, restores the original source tree (TypeScript/JSX included); otherwise formats the minified JS/CSS with Prettier in place. Always skips `node_modules`. Works on macOS and Windows; pass `--asar <path>` on other platforms.
+
+```bash
+# Extract by app name (default output: ~/Downloads/Codex-electron-extract/)
+/baoyu-electron-extract Codex
+
+# Extract by absolute path (.app bundle, install dir, or .asar file)
+/baoyu-electron-extract "/Applications/Visual Studio Code.app"
+/baoyu-electron-extract --asar /Applications/Codex.app/Contents/Resources/app.asar Codex
+
+# Custom output directory
+/baoyu-electron-extract Codex --output ~/work/codex-source
+
+# Preview discovery without writing anything
+/baoyu-electron-extract Codex --dry-run
+
+# Overwrite an existing output directory
+/baoyu-electron-extract Codex --force
+```
+
+**Options**:
+| Option | Description | Default |
+|--------|-------------|---------|
+| `<app>` | App name or absolute path (required unless `--asar`) | — |
+| `--output`, `-o` | Output directory | `~/Downloads/<AppName>-electron-extract` |
+| `--asar` | Override the resolved `.asar` path | auto-discovered |
+| `--force`, `-f` | Allow writing into a non-empty existing output dir | false |
+| `--skip-format` | Skip Prettier formatting | false |
+| `--skip-restore` | Skip source-map restoration | false |
+| `--no-unpacked` | Don't copy `app.asar.unpacked/` alongside | false |
+| `--dry-run` | Print resolved paths and exit without writing | false |
+| `--json` | Emit one JSON-line summary on stdout | false |
+
+**Output layout**: `extract-report.json` (counts, warnings, paths), `extracted/` (raw asar, formatted in place when no map), `extracted.unpacked/` (native modules if present), and `restored/` (rebuilt source tree from `.js.map` files).
+
 ## Environment Configuration
 
 Some skills require API keys or custom configuration. Environment variables can be set in `.env` files:
 
 **Load Priority** (higher priority overrides lower):
-1. CLI environment variables (e.g., `OPENAI_API_KEY=xxx /baoyu-imagine ...`)
+1. CLI environment variables (e.g., `OPENAI_API_KEY=xxx /baoyu-image-gen ...`)
 2. `process.env` (system environment)
 3. `<cwd>/.baoyu-skills/.env` (project-level)
 4. `~/.baoyu-skills/.env` (user-level)
@@ -1144,14 +1225,14 @@ AZURE_OPENAI_DEPLOYMENT=gpt-image-2
 
 # OpenRouter
 OPENROUTER_API_KEY=sk-or-xxx
-OPENROUTER_IMAGE_MODEL=google/gemini-3.1-flash-image-preview
+OPENROUTER_IMAGE_MODEL=google/gemini-3.1-flash-image
 # OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 # OPENROUTER_HTTP_REFERER=https://your-app.example.com
 # OPENROUTER_TITLE=Your App Name
 
 # Google
 GOOGLE_API_KEY=xxx
-GOOGLE_IMAGE_MODEL=gemini-3-pro-image-preview
+GOOGLE_IMAGE_MODEL=gemini-3-pro-image
 # GOOGLE_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 
 # DashScope (Aliyun Tongyi Wanxiang)

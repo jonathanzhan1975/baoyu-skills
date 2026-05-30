@@ -2,6 +2,171 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 2.4.0 - 2026-05-29
+
+### 新功能
+- `baoyu-wechat-summary`：为正常版和毒舌版简报新增「@bot 答疑」小节。识别群里提及 `@bot` / `@精华bot`（可通过新增的 `bot_aliases` 偏好自定义）的提问/请求，在专门小节中逐条回应——正常版真诚有用，毒舌版带刺但仍给干货。答复只依据群聊上下文和模型自有知识（不联网），需要实时数据的会如实注明
+
+## 2.3.0 - 2026-05-28
+
+### 新功能
+- `baoyu-md`、`baoyu-markdown-to-html`、`baoyu-post-to-wechat`、`baoyu-post-to-x`：支持 Obsidian 图片 wikilink（`![[...]]`），可与标准 Markdown 图片混用并保持图片顺序，同时解析 Obsidian 默认的 `Attachments/` 路径 (by @zcqqq)
+
+### 修复
+- `baoyu-md`、`baoyu-post-to-x`：解析本地图片路径前先解码 URL 编码，正确处理包含空格或中文等字符的文件名 (by @zcqqq)
+- `baoyu-md`、`baoyu-post-to-x`：加固图片路径解码逻辑，遇到异常百分号转义时安全回退，避免中断占位符提取 (by @zcqqq)
+
+## 2.2.1 - 2026-05-26
+
+### 文档
+- `baoyu-image-gen`：在 SKILL.md 的 Usage 段落中显式展示 `scripts/build-batch.ts`，使 `outline.md` + `prompts/` → `batch.json` 流程（例如 `baoyu-article-illustrator` 的产物）能与 `--batchfile` 并列被发现。明确 SKILL.md 中所有 `scripts/...` 路径均相对 `{baseDir}`，并把 Generation Mode 表中的指引改为 `{baseDir}/scripts/build-batch.ts`。`build-batch.ts --help` 同步打印 `bun` / `npx -y bun` 调用，与 skill 其它脚本统一使用 `{baseDir}/scripts/...` 写法
+
+## 2.2.0 - 2026-05-25
+
+### 新功能
+- `baoyu-image-gen`：新增 `codex-cli` provider，封装 `codex-imagegen` 后端，让 Codex 内置的 `image_gen` 工具也能走标准的 `--provider` / 批量 / EXTEND.md 流程。使用用户自己的 Codex 订阅,无需 `OPENAI_API_KEY`。新增环境变量 `BAOYU_CODEX_IMAGEGEN_{BIN,CACHE_DIR,TIMEOUT_MS,RETRIES,LOG_FILE}`；`BAOYU_IMAGE_GEN_<PROVIDER>_*` 类覆盖项支持带连字符的 provider 名称(如 `BAOYU_IMAGE_GEN_CODEX_CLI_CONCURRENCY`)。`codex-cli` **不会**自动选用,需通过 `--provider codex-cli` 或 EXTEND.md 的 `default_provider: codex-cli` 显式指定
+
+### 重构
+- `codex-imagegen`：从 `scripts/codex-imagegen/` + `scripts/codex-imagegen.sh` 拆分为独立的 workspace 包 `packages/baoyu-codex-imagegen/`。bash 包装器已移除,`src/main.ts` 自带 `#!/usr/bin/env bun` shebang,作为唯一入口(`bun packages/baoyu-codex-imagegen/src/main.ts …`,若 `PATH` 中无 bun 则 `npx -y bun …`)。新增 `scripts/sync-codex-imagegen.sh` 同步 `skills/baoyu-image-gen/scripts/codex-imagegen/`,保持 skill 自包含
+
+### 文档
+- `baoyu-cover-image`：`SKILL.md` 中较长的 `scripts/codex-imagegen.sh` 内联调用块替换为指向 `references/codex-imagegen.md` 的链接,文档明确优先走 `baoyu-image-gen --provider codex-cli`、并保留直接调用 wrapper 的回退路径
+- `baoyu-article-illustrator`、`baoyu-comic`、`baoyu-infographic`、`baoyu-slide-deck`、`baoyu-xhs-images`：在各自 backend 选择阶梯中新增 `Codex via codex exec` 分支,并附带 per-skill 的 `references/codex-imagegen.md`(优先路径、回退、stdout schema、批量语义)
+- `docs/codex-imagegen-backend.md` 与 `CLAUDE.md`：同步新的 workspace 路径与调用示例
+
+## 2.1.0 - 2026-05-24
+
+### 新功能
+- `baoyu-markdown-to-html`：在标准图片占位符流水线之前,通过共享 Chrome（CDP）把 ` ```mermaid ` 围栏代码块渲染为本地 PNG。新增 CLI 参数 `--mermaid-theme <default|forest|dark|neutral|base>`、`--mermaid-scale <N>`（默认 `2`,即 @2x 分辨率）、`--mermaid-bg <white|transparent|#hex>`,以及用于关闭渲染的 `--no-mermaid`。生成的图片落在 `imgs/.mermaid-cache/mermaid-<hash>.png`,跨次运行通过对 `(code, theme, scale, background, mermaid 版本)` 取 SHA-256 前 12 位进行去重/复用。Chrome 不可用或单块渲染失败时,保留浏览器侧 `<pre class="mermaid">` 兜底
+- `baoyu-post-to-wechat`、`baoyu-post-to-weibo`、`baoyu-post-to-x`:在微信 / 微博 / X 发布流水线中同步接入上述 Mermaid → PNG 预处理,Mermaid 图能以真图形式出现在已发布的稿件中(此前会落到未渲染的 `<pre>` 块)。现有的 `WECHATIMGPH_*` / `WBIMGPH_*` / `XIMGPH_*` 占位符流水线无需改动,会直接拾取生成的 PNG
+- `baoyu-md` 包:新增导出 `preprocessMermaidInMarkdown`、`extractMermaidBlocks`、`replaceMermaidBlocks`、`hashMermaidCode`、`MERMAID_VERSION`(渲染函数由 skill 注入,本包不再反向依赖 Chrome)
+- `baoyu-chrome-cdp` 包:新增 `./mermaid` 子导出,提供 `renderMermaidToPng(code, outputPath, options)`,底层为进程级单例 CDP 连接,复用共享 Chrome profile,并把 Mermaid 10.9.1 UMD 资产打入包内
+
+## 2.0.1 - 2026-05-24
+
+### 修复
+- `baoyu-post-to-wechat`：发布 `newspic`（图文）时，将 `content` 字段从 HTML 转换为纯文本后再提交微信草稿接口。此前直接传 HTML，多图场景下内容长度超出限制会触发错误 45166（invalid content）。新增 `htmlToPlainText` 工具：把 `<br>` 和块级闭合标签转成换行、剥离其余标签、解码命名实体与十进制/十六进制数字实体、合并多余空白 (by @Go1dFinger, [#164](https://github.com/JimLiu/baoyu-skills/pull/164), 关联 [#163](https://github.com/JimLiu/baoyu-skills/issues/163))
+
+### 致谢
+- `baoyu-post-to-wechat` 的 newspic 纯文本修复由 @Go1dFinger 贡献（[#164](https://github.com/JimLiu/baoyu-skills/pull/164)）
+
+## 2.0.0 - 2026-05-24
+
+### 破坏性变更
+- 移除 `baoyu-imagine` skill。所有功能（providers、脚本、references）合并入 `baoyu-image-gen`，`marketplace.json` 改用新名称注册，`homepage` 链接更新为 `#baoyu-image-gen`
+- 移除 `baoyu-image-cards` skill。所有功能（样式、布局、配色、预设）合并入 `baoyu-xhs-images`，`marketplace.json` 改用新名称注册
+- 其它 skill（`baoyu-article-illustrator`、`baoyu-comic`、`baoyu-cover-image`、`baoyu-infographic`、`baoyu-slide-deck`）中 `## Image Generation Tools` 示例统一改用 `baoyu-image-gen`，不再引用 `baoyu-imagine`
+
+### 迁移说明
+- 旧的 `~/.baoyu-skills/baoyu-imagine/EXTEND.md` 与 `.baoyu-skills/baoyu-imagine/EXTEND.md` 配置文件会被 `scripts/main.ts` 中的 legacy-path 解析器自动重命名到 `…/baoyu-image-gen/EXTEND.md`，首次运行时迁移
+- 通过斜杠命令调用时，请将 `/baoyu-imagine ...` 改为 `/baoyu-image-gen ...`；将所有 `baoyu-image-cards` 改为 `baoyu-xhs-images`
+
+## 1.119.0 - 2026-05-24
+
+### 新功能
+- `baoyu-electron-extract`：新增 skill，可从任意已安装的 Electron 应用的 `app.asar` 中提取资源和 JavaScript。`.js.map` 文件内嵌 `sourcesContent` 时还原原始源码（含 TypeScript/JSX），否则用 Prettier 原地美化压缩后的 JS/CSS。source-map 路径先相对各 `.js.map` 文件解析，因此 `../../src/main.ts` 这类打包器相对路径会还原为 `restored/` 下的可读路径，而不是哈希占位符。始终跳过 `node_modules` 和 `webpack/runtime/*` 条目。macOS 下自动从 `/Applications` 和 `~/Applications` 发现应用，Windows 下从 `%LOCALAPPDATA%\Programs`、`%PROGRAMFILES%`、`%PROGRAMFILES(X86)%`、`%APPDATA%` 发现；其他平台请用 `--asar <path>` 显式指定。安全：拒绝写入 `/`、用户主目录或当前工作目录，未加 `--force` 时拒绝写入非空的已有输出目录
+
+## 1.118.0 - 2026-05-21
+
+### 新功能
+- `codex-imagegen`：新增面向非 Codex 运行时（如 Claude Code）的图像生成后端 —— 通过 `codex exec --json --sandbox danger-full-access` 调用 Codex CLI 内置的 `image_gen` 工具，无需 `OPENAI_API_KEY`。内置幂等缓存、文件锁并发控制、JSONL 事件流解析、PNG 魔术字节校验和指数退避重试 (by @yelban, #158)
+- `baoyu-cover-image`：在 `SKILL.md` 中接入 `codex-imagegen` 包装脚本（当 `preferred_image_backend: codex-imagegen` 时生效），并补充慢网络下的 `--timeout` 参数说明
+
+### 重构
+- `codex-imagegen`：在代码中强制校验 `--prompt` 与 `--prompt-file` 互斥（此前仅在文档说明）
+- `codex-imagegen`：将 `(opts as any).__promptFile` 这一 hack 改为 `CliOptions` 上类型化的 `promptFile` 字段
+- `codex-imagegen`：用复用的 `findCpToTarget` 辅助函数替换内联的 `cp|mv ... generated_images` 正则
+- `codex-imagegen`：错误返回时正确透传 `attempts`（此前硬编码为 `0`）
+- `codex-imagegen`：删除无用的 `parseFinalJson()` 函数及对应测试（包装脚本以磁盘校验为准，不再依赖 agent 自报 JSON）
+
+### 安全
+- `codex-imagegen`：在拼入发往 `codex exec --sandbox danger-full-access` 的 agent 指令前，拒绝包含 shell 元字符的 `--image` / `--ref` 路径
+
+### 致谢
+- `codex-imagegen` 后端由 @yelban 贡献 (#158)
+
+## 1.117.5 - 2026-05-21
+
+### 致谢
+- `baoyu-post-to-wechat`：远程 API 发布更新感谢 Dame5211 <1079825614@qq.com>
+
+## 1.117.4 - 2026-05-21
+
+### 新功能
+- `baoyu-post-to-wechat`：新增通过 SSH SOCKS5 隧道进行远程 API 发布
+
+### 修复
+- `baoyu-post-to-wechat`：修复远程 API 发布在 Bun 下的运行问题，并严格校验远程发布配置
+
+### CI
+- 测试前安装 `baoyu-post-to-wechat` 脚本依赖
+
+## 1.117.3 - 2026-05-20
+
+### 新功能
+- CI：新增 skill 发布提交校验 —— 涉及 `skills/<name>/**` 的提交必须使用 Conventional Commit 格式；发布/同步时校验 SKILL.md 版本一致性
+
+### 修复
+- `baoyu-diagram`：为 SKILL.md 添加 version 字段
+- `baoyu-post-to-wechat`：同步 SKILL.md 版本
+
+### 文档
+- `baoyu-wechat-summary`：重构 profile 字段 —— 将 `aliases` 拆分为 `group_nicknames`（用户历史群名）和 `aliases`（其他成员对用户的称呼），新增 `tags` 字段存储横向属性
+
+## 1.117.2 - 2026-05-17
+
+### 文档
+- `baoyu-cover-image`：禁止用代码修补已生成的位图文字 —— 不再使用 ImageMagick / Pillow / Canvas / SVG / HTML 叠层覆盖、重写或替换标题/副标题文字，文字异常时应改 prompt 重新生成或换用少字/无标题版本
+- `baoyu-article-illustrator`、`baoyu-comic`、`baoyu-image-cards`、`baoyu-xhs-images`、`baoyu-infographic`、`baoyu-slide-deck`：同步上述文字修补禁令，各自针对该 skill 的文字类别（标签/说明、对白/拟声词、标题/正文/标签、标题/数据、幻灯片标题/要点）
+
+## 1.117.1 - 2026-05-16
+
+### 修复
+- `baoyu-post-to-wechat`：修复微信浏览器文章发布问题 (by @zhangga)
+- `baoyu-post-to-wechat`：修复图片上传回退逻辑及 macOS WebP 剪贴板复制
+
+## 1.117.0 - 2026-05-16
+
+### 新功能
+- `baoyu-article-illustrator`：新增批量生成策略 —— 优先使用后端原生批量接口，其次运行时并行调用，最后顺序生成；支持 `generation_batch_size` 配置和 `--batch-size` 参数
+- `baoyu-comic`：新增批量生成策略，支持依赖感知排序（角色图先于页面）和 `--batch-size` 参数
+- `baoyu-image-cards`：新增批量生成策略，遵循 image-1 锚定链，支持 `--batch-size` 参数
+- `baoyu-slide-deck`：新增幻灯片图片批量生成策略，支持 `--batch-size` 参数
+- `baoyu-xhs-images`：同步 baoyu-image-cards 的批量生成策略
+
+## 1.116.5 - 2026-05-14
+
+### 新功能
+- `baoyu-post-to-wechat`：当设置 `TELEGRAM_BOT_TOKEN` 和 `TELEGRAM_CHAT_ID` 环境变量时，自动将微信登录二维码发送到 Telegram，支持无显示器/远程登录场景 (by @beforesun)
+
+### 重构
+- `baoyu-post-to-wechat`：加固 Telegram QR 通知逻辑 —— 增加 10 秒 fetch 超时、未配置环境变量时不再无谓等待 2 秒、回退截图改为视口范围以减小体积
+
+## 1.116.4 - 2026-05-14
+
+### 重构
+- `baoyu-wechat-summary`：精简毒舌版提示词（99 → 23 行），在 SKILL.md Round 2 中增加 roast 专用的画像使用指引
+
+## 1.116.3 - 2026-05-13
+
+### 文档
+- README 中将 Claude Code 替换为通用的 Agent 表述，体现多 Agent 支持（Claude Code、Codex 等）
+
+## 1.116.2 - 2026-05-13
+
+### 文档
+- `baoyu-wechat-summary`：更新 SKILL.md 中的示例群名
+
+## 1.116.1 - 2026-05-13
+
+### 新功能
+- `baoyu-wechat-summary`：初始化设置流程中新增 `data_root` 选项，允许用户在首次配置时自定义摘要输出目录
+
+## 1.116.0 - 2026-05-13
+
+### 新功能
+- 新增 `baoyu-wechat-summary` 技能：将微信群聊精华提炼为结构化简报，支持话题提取、发言排行榜和群友画像。可生成正常版和毒舌版，支持增量模式和画像回溯初始化。需安装 [wx-cli](https://github.com/jackwener/wx-cli)。
+
 ## 1.115.4 - 2026-05-11
 
 ### 文档

@@ -2,7 +2,7 @@
 
 [English](./README.md) | 中文
 
-宝玉分享的 Claude Code 技能集，提升日常工作效率。
+宝玉分享的 AI Agent 技能集（适用于 Claude Code、Codex 等），提升日常工作效率。
 
 ## 前置要求
 
@@ -10,6 +10,8 @@
 - 能够运行 `npx bun` 命令
 
 ## 安装
+
+> **提示**：本仓库已收录 20+ 个 skill，请按需安装你真正会用到的那几个，不要一次性全装 —— 每个加载的 skill 都会在 Agent 每次运行时占用额外上下文。
 
 ### 快速安装（推荐）
 
@@ -32,7 +34,7 @@ npx skills add jimliu/baoyu-skills
 ClawHub 按“单个 skill”安装，不是把整个 marketplace 一次性装进去。发布后，用户可以按需安装：
 
 ```bash
-clawhub install baoyu-imagine
+clawhub install baoyu-image-gen
 clawhub install baoyu-markdown-to-html
 ```
 
@@ -40,7 +42,7 @@ clawhub install baoyu-markdown-to-html
 
 ### 注册插件市场
 
-在 Claude Code 中运行：
+在 Agent 中运行：
 
 ```bash
 /plugin marketplace add JimLiu/baoyu-skills
@@ -64,7 +66,7 @@ clawhub install baoyu-markdown-to-html
 
 **方式三：告诉 Agent**
 
-直接告诉 Claude Code：
+直接告诉 Agent：
 
 > 请帮我安装 github.com/JimLiu/baoyu-skills 中的 Skills
 
@@ -80,7 +82,7 @@ clawhub install baoyu-markdown-to-html
 
 更新技能到最新版本：
 
-1. 在 Claude Code 中运行 `/plugin`
+1. 在 Agent 中运行 `/plugin`
 2. 切换到 **Marketplaces** 标签页（使用方向键或 Tab）
 3. 选择 **baoyu-skills**
 4. 选择 **Update marketplace**
@@ -579,7 +581,7 @@ clawhub install baoyu-markdown-to-html
 
 ```bash
 # 发布文字
-/baoyu-post-to-x "Hello from Claude Code!"
+/baoyu-post-to-x "Hello from AI Agent!"
 
 # 发布带图片
 /baoyu-post-to-x "看看这个" --image photo.png
@@ -612,8 +614,9 @@ clawhub install baoyu-markdown-to-html
 
 | 方式 | 速度 | 要求 |
 |------|------|------|
-| API（推荐） | 快 | API 凭证 |
+| API（推荐） | 快 | API 凭证（本机 IP 在公众号白名单内） |
 | 浏览器 | 慢 | Chrome，登录会话 |
+| 远程 API | 快 | API 凭证 + 一台 IP 在公众号白名单内、可 SSH 登录的服务器 |
 
 **API 配置**（更快的发布方式）：
 
@@ -630,6 +633,8 @@ WECHAT_APP_SECRET=你的AppSecret
 4. 将你操作的机器 IP 加入白名单
 
 **浏览器方式**（无需 API 配置）：需已安装 Google Chrome，首次运行需扫码登录（登录状态会保存）
+
+**远程 API 方式**（适用于本机 IP 不在公众号白名单内的情况）：通过 SSH SOCKS5 动态端口转发，将对 `api.weixin.qq.com` 的 HTTPS 调用转发到 IP 在白名单内的服务器上。Markdown 渲染、图片处理、草稿组装仍在本地完成；远端不会落任何文件，`AppSecret` 不会离开本地进程。仅支持 SSH 密钥认证，且只接受类型化的 `remote_publish_*` 配置项，不透传任意 ssh 选项。在 EXTEND.md 中配置 `remote_publish_host` 等字段后，发布时加上 `--remote`（或将 `default_publish_method` 设为 `remote-api`）。
 
 **多账号支持**：通过 `EXTEND.md` 管理多个微信公众号：
 
@@ -712,67 +717,67 @@ accounts:
 
 AI 驱动的生成后端。
 
-#### baoyu-imagine
+#### baoyu-image-gen
 
 基于 AI SDK 的图像生成，支持 OpenAI GPT Image 2、Azure OpenAI、Google、OpenRouter、DashScope（阿里通义万相）、MiniMax、即梦（Jimeng）、豆包（Seedream）和 Replicate API。支持文生图、参考图、宽高比、自定义尺寸、批量生成和质量预设。
 
 ```bash
 # 基础生成（自动检测服务商）
-/baoyu-imagine --prompt "一只可爱的猫" --image cat.png
+/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png
 
 # 指定宽高比
-/baoyu-imagine --prompt "风景图" --image landscape.png --ar 16:9
+/baoyu-image-gen --prompt "风景图" --image landscape.png --ar 16:9
 
 # 高质量（2k 分辨率）
-/baoyu-imagine --prompt "横幅图" --image banner.png --quality 2k
+/baoyu-image-gen --prompt "横幅图" --image banner.png --quality 2k
 
 # 指定服务商
-/baoyu-imagine --prompt "一只猫" --image cat.png --provider openai --model gpt-image-2
+/baoyu-image-gen --prompt "一只猫" --image cat.png --provider openai --model gpt-image-2
 
 # Azure OpenAI（model 为部署名称）
-/baoyu-imagine --prompt "一只猫" --image cat.png --provider azure --model gpt-image-2
+/baoyu-image-gen --prompt "一只猫" --image cat.png --provider azure --model gpt-image-2
 
 # OpenRouter
-/baoyu-imagine --prompt "一只猫" --image cat.png --provider openrouter
+/baoyu-image-gen --prompt "一只猫" --image cat.png --provider openrouter
 
 # OpenRouter + 参考图
-/baoyu-imagine --prompt "把它变成蓝色" --image out.png --provider openrouter --model google/gemini-3.1-flash-image-preview --ref source.png
+/baoyu-image-gen --prompt "把它变成蓝色" --image out.png --provider openrouter --model google/gemini-3.1-flash-image --ref source.png
 
 # DashScope（阿里通义万相）
-/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider dashscope
+/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider dashscope
 
 # DashScope 自定义尺寸
-/baoyu-imagine --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
+/baoyu-image-gen --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
 
 # Z.AI GLM-Image
-/baoyu-imagine --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
+/baoyu-image-gen --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
 
 # MiniMax
-/baoyu-imagine --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
+/baoyu-image-gen --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
 
 # MiniMax + 角色参考图
-/baoyu-imagine --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
+/baoyu-image-gen --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
 
 # Replicate（默认：google/nano-banana-2）
-/baoyu-imagine --prompt "一只猫" --image cat.png --provider replicate
+/baoyu-image-gen --prompt "一只猫" --image cat.png --provider replicate
 
 # Replicate Seedream 4.5
-/baoyu-imagine --prompt "一张影棚人像" --image portrait.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
+/baoyu-image-gen --prompt "一张影棚人像" --image portrait.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
 
 # Replicate Wan 2.7 Image Pro
-/baoyu-imagine --prompt "一张概念分镜" --image frame.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
+/baoyu-image-gen --prompt "一张概念分镜" --image frame.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
 
 # 即梦（Jimeng）
-/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider jimeng
+/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider jimeng
 
 # 豆包（Seedream）
-/baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider seedream
+/baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider seedream
 
 # 带参考图（Google、OpenAI、Azure OpenAI、OpenRouter、Replicate、MiniMax 或 Seedream 5.0/4.5/4.0）
-/baoyu-imagine --prompt "把它变成蓝色" --image out.png --ref source.png
+/baoyu-image-gen --prompt "把它变成蓝色" --image out.png --ref source.png
 
 # 批量模式
-/baoyu-imagine --batchfile batch.json --jobs 4 --json
+/baoyu-image-gen --batchfile batch.json --jobs 4 --json
 ```
 
 **选项**：
@@ -813,8 +818,8 @@ AI 驱动的生成后端。
 | `OPENAI_IMAGE_MODEL` | OpenAI 模型 | `gpt-image-2` |
 | `AZURE_OPENAI_DEPLOYMENT` | Azure 默认部署名 | - |
 | `AZURE_OPENAI_IMAGE_MODEL` | 兼容旧配置的 Azure 部署/模型别名 | `gpt-image-2` |
-| `OPENROUTER_IMAGE_MODEL` | OpenRouter 模型 | `google/gemini-3.1-flash-image-preview` |
-| `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image-preview` |
+| `OPENROUTER_IMAGE_MODEL` | OpenRouter 模型 | `google/gemini-3.1-flash-image` |
+| `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `qwen-image-2.0-pro` |
 | `ZAI_IMAGE_MODEL` | Z.AI 模型 | `glm-image` |
 | `BIGMODEL_IMAGE_MODEL` | Z.AI 模型向后兼容别名 | `glm-image` |
@@ -851,7 +856,7 @@ AI 驱动的生成后端。
 - MiniMax 参考图会走 `subject_reference`，当前能力更偏角色 / 人像一致性。
 - 即梦不支持参考图。
 - 豆包参考图能力仅适用于 Seedream 5.0 / 4.5 / 4.0，不适用于 Seedream 3.0。
-- Replicate 默认模型改为 `google/nano-banana-2`。`baoyu-imagine` 目前只对 `google/nano-banana*`、`bytedance/seedream-4.5`、`bytedance/seedream-5-lite`、`wan-video/wan-2.7-image` 和 `wan-video/wan-2.7-image-pro` 开启本地能力识别与校验。
+- Replicate 默认模型改为 `google/nano-banana-2`。`baoyu-image-gen` 目前只对 `google/nano-banana*`、`bytedance/seedream-4.5`、`bytedance/seedream-5-lite`、`wan-video/wan-2.7-image` 和 `wan-video/wan-2.7-image-pro` 开启本地能力识别与校验。
 - Replicate 当前只保存单张输出图，`--n > 1` 会在本地直接报错，避免多图结果被静默丢弃。
 - Replicate 的参数能力按模型家族区分：nano-banana 走 `--quality` / `--ar`，Seedream 走校验后的 `--size` / `--ar`，Wan 走校验后的 `--size`（`--ar` 会先在本地换算成具体尺寸）。
 
@@ -1112,12 +1117,79 @@ AI 驱动的生成后端。
 - 为文化/专业术语添加译注
 - 输出目录保留所有中间文件
 
+#### baoyu-wechat-summary
+
+微信群聊精华提取。使用 [wx-cli](https://github.com/jackwener/wx-cli) 从群消息中提取话题、引言和统计数据，生成结构化简报。支持跨次运行的群聊历史和群友画像维护，可生成正常版和毒舌版，并在简报中回应群里向 `@bot` 提出的问题。
+
+```bash
+# 总结群最近消息
+/baoyu-wechat-summary 相亲相爱一家人 最近 1 天
+
+# 周报
+/baoyu-wechat-summary AI 技术群 最近 7 天
+
+# 增量模式（从上次摘要继续）
+/baoyu-wechat-summary 相亲相爱一家人
+
+# 毒舌版
+/baoyu-wechat-summary 相亲相爱一家人 最近 3 天 毒舌版
+```
+
+**前置要求**：
+- 安装 [wx-cli](https://github.com/jackwener/wx-cli)（`npm install -g @jackwener/wx-cli`）
+- macOS 上运行并登录 WeChat 4.x
+
+**特性**：
+- 话题提取，带归属和引言
+- 发言排行榜和群友画像
+- 增量模式（从上次摘要断点继续）
+- 大批量消息自动按天分割
+- 正常版和毒舌版两种风格
+- 支持从历史摘要回溯初始化画像
+
+#### baoyu-electron-extract
+
+从任意已安装的 Electron 应用的 `app.asar` 中提取资源和 JavaScript。当 `.js.map` 内嵌 `sourcesContent` 时，还原原始源码树（含 TypeScript/JSX）；否则用 Prettier 原地美化压缩后的 JS/CSS。始终跳过 `node_modules`。支持 macOS 和 Windows，其他平台请用 `--asar <path>` 指定 asar 文件。
+
+```bash
+# 按应用名提取（默认输出：~/Downloads/<AppName>-electron-extract/）
+/baoyu-electron-extract Codex
+
+# 按绝对路径提取（.app 包、安装目录或 .asar 文件均可）
+/baoyu-electron-extract "/Applications/Visual Studio Code.app"
+/baoyu-electron-extract --asar /Applications/Codex.app/Contents/Resources/app.asar Codex
+
+# 自定义输出目录
+/baoyu-electron-extract Codex --output ~/work/codex-source
+
+# 仅预览发现的路径，不写入任何文件
+/baoyu-electron-extract Codex --dry-run
+
+# 覆盖已存在的输出目录
+/baoyu-electron-extract Codex --force
+```
+
+**选项**：
+| 选项 | 说明 | 默认值 |
+|------|------|--------|
+| `<app>` | 应用名或绝对路径（未给 `--asar` 时必填） | — |
+| `--output`, `-o` | 输出目录 | `~/Downloads/<AppName>-electron-extract` |
+| `--asar` | 覆盖解析得到的 `.asar` 路径 | 自动发现 |
+| `--force`, `-f` | 允许写入非空的已有输出目录 | false |
+| `--skip-format` | 跳过 Prettier 格式化 | false |
+| `--skip-restore` | 跳过 source-map 还原 | false |
+| `--no-unpacked` | 不复制同级的 `app.asar.unpacked/` | false |
+| `--dry-run` | 打印解析路径后退出，不写文件 | false |
+| `--json` | 在 stdout 输出一行 JSON 概要 | false |
+
+**输出结构**：`extract-report.json`（计数、警告、路径），`extracted/`（asar 原始内容，无 map 时原地美化），`extracted.unpacked/`（存在时复制的原生模块），以及 `restored/`（基于 `.js.map` 重建的源码树）。
+
 ## 环境配置
 
 部分技能需要 API 密钥或自定义配置。环境变量可以在 `.env` 文件中设置：
 
 **加载优先级**（高优先级覆盖低优先级）：
-1. 命令行环境变量（如 `OPENAI_API_KEY=xxx /baoyu-imagine ...`）
+1. 命令行环境变量（如 `OPENAI_API_KEY=xxx /baoyu-image-gen ...`）
 2. `process.env`（系统环境变量）
 3. `<cwd>/.baoyu-skills/.env`（项目级）
 4. `~/.baoyu-skills/.env`（用户级）
@@ -1144,14 +1216,14 @@ AZURE_OPENAI_DEPLOYMENT=gpt-image-2
 
 # OpenRouter
 OPENROUTER_API_KEY=sk-or-xxx
-OPENROUTER_IMAGE_MODEL=google/gemini-3.1-flash-image-preview
+OPENROUTER_IMAGE_MODEL=google/gemini-3.1-flash-image
 # OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 # OPENROUTER_HTTP_REFERER=https://your-app.example.com
 # OPENROUTER_TITLE=你的应用名
 
 # Google
 GOOGLE_API_KEY=xxx
-GOOGLE_IMAGE_MODEL=gemini-3-pro-image-preview
+GOOGLE_IMAGE_MODEL=gemini-3-pro-image
 # GOOGLE_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 
 # DashScope（阿里通义万相）
